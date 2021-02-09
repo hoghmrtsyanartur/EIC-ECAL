@@ -31,6 +31,7 @@
 /gui/addButton gun "8 GeV"  "/gun/energy 8 GeV"
 /gui/addButton gun "9 GeV"  "/gun/energy 9 GeV"
 /gui/addButton gun "10 GeV" "/gun/energy 10 GeV"
+/gui/addButton gun "100 GeV" "/gun/energy 100 GeV"
 /gui/addButton gun "e-"      "/gun/particle e-"
 /gui/addButton gun "pi0"     "/gun/particle pi0"
 /gui/addButton gun "pi+"     "/gun/particle pi+"
