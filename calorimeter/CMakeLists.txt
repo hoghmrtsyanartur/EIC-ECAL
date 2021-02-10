@@ -24,6 +24,9 @@ set(CALORIMETER_SCRIPTS
   calor.cc
   plotHisto.C
   run1.mac
+  gui.mac
+  init_vis.mac
+  vis.mac
   )
   
 foreach(_script ${Calorimeter_SCRIPTS})
