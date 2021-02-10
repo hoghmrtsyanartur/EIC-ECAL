@@ -179,14 +179,14 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     auto PWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
 
     
-    for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
+    for(int i=0;i<5;i++){
+        for(int j=0;j<5;j++){
                     std::stringstream sstm;
                     sstm << "pwo_phys_" << i*j;
                     std::string name = sstm.str();
                     double x = i*PWO_Width;
                     double y = j*PWO_Width;
-                    new G4PVPlacement(nullptr, G4ThreeVector(x-PWO_Width,y-PWO_Width, PWO_PosZ), PWO_LV,name, worldLV, false, fCheckOverlaps);
+                    new G4PVPlacement(nullptr, G4ThreeVector(x-2*PWO_Width,y-2*PWO_Width, PWO_PosZ), PWO_LV,name, worldLV, false, fCheckOverlaps);
         }
     }
 
