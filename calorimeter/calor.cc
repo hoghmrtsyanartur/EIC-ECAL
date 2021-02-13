@@ -5,14 +5,14 @@
 
 #include "G4UImanager.hh"
 #include "G4UIcommand.hh"
-#include "FTFP_BERT.hh"
+#include "QGSP_BERT.hh"
 
 #include "Randomize.hh"
 
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
 
-//#include "AddOptics.hh"
+#include "AddOptics.hh"
 
 #include "G4SystemOfUnits.hh"
 
@@ -71,15 +71,15 @@ int main(int argc,char** argv)
   auto detConstruction = new DetectorConstruction();
   runManager->SetUserInitialization(detConstruction);
 
-  auto physicsList = new FTFP_BERT;
-
+  auto physicsList = new QGSP_BERT;
+  
   /*
   physicsList->SetCutValue(3.5*cm, "gamma");
   physicsList->SetCutValue(0.085*mm, "e-");
   physicsList->SetCutValue(0.085*mm, "e+");
-  */
-  //physicsList->RegisterPhysics(new npsAddOptics("Cerenkov & Scintillation") );
 
+  physicsList->RegisterPhysics(new AddOptics("Cerenkov & Scintillation") );
+  */
   runManager->SetUserInitialization(physicsList);
     
   auto actionInitialization = new Action();

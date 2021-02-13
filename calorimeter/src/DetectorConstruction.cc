@@ -104,6 +104,13 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     G4double PWO_OuterR = 82. * cm;
     G4double PWO_PosZ = 0;
 
+    G4GenericMessenger *Messenger = new G4GenericMessenger(this, "/EMCAL/");
+            Messenger->DeclareProperty("pwoThickness", PWO_Thickness, "Thikness (z direction dimention) of PWO crystals ");
+            Messenger->DeclareProperty("pwoWidth", PWO_Width, "Width (and higth) of each PWO crystal");
+            Messenger->DeclareProperty("pwoGap", PWO_Gap, "Gap between PWO crystals ");
+
+
+
  /*   //............... EMCAL Glass modules ......................
     double Glass_Thickness = 40. * cm;
     double Glass_Width = 4. * cm;
@@ -184,9 +191,9 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
                     std::stringstream sstm;
                     sstm << "pwo_phys_" << i*j;
                     std::string name = sstm.str();
-                    double x = i*PWO_Width;
-                    double y = j*PWO_Width;
-                    new G4PVPlacement(nullptr, G4ThreeVector(x-PWO_Width,y-PWO_Width, PWO_PosZ), PWO_LV,name, worldLV, false, fCheckOverlaps);
+                    double x = i*(PWO_Width+PWO_Gap);
+                    double y = j*(PWO_Width+PWO_Gap);
+                    new G4PVPlacement(nullptr, G4ThreeVector(x-PWO_Width-PWO_Gap,y-PWO_Width-PWO_Gap, PWO_PosZ), PWO_LV,name, worldLV, false, fCheckOverlaps);
         }
     }
 

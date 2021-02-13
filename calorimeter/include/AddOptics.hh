@@ -9,11 +9,11 @@
 #include "G4OpBoundaryProcess.hh"
 #include "G4ProcessManager.hh"
 
-class npsAddOptics : public G4VPhysicsConstructor {
+class AddOptics : public G4VPhysicsConstructor {
 
 public:
 
-  npsAddOptics(G4String aS) : G4VPhysicsConstructor(aS) {};
+  AddOptics(G4String aS) : G4VPhysicsConstructor(aS) {};
 
   virtual void ConstructParticle() 
   {
