@@ -5,7 +5,7 @@
 
 #include "G4UImanager.hh"
 #include "G4UIcommand.hh"
-#include "QGSP_BERT.hh"
+#include "FTFP_BERT.hh"
 
 #include "Randomize.hh"
 
@@ -71,7 +71,7 @@ int main(int argc,char** argv)
   auto detConstruction = new DetectorConstruction();
   runManager->SetUserInitialization(detConstruction);
 
-  auto physicsList = new QGSP_BERT;
+  auto physicsList = new FTFP_BERT;
   
   /*
   physicsList->SetCutValue(3.5*cm, "gamma");
