@@ -92,12 +92,12 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     G4double RIn = 15 * cm;
     G4double ROut = 120 *cm;
     //G4double ROutshift = 5 * cm;
-    G4double Thickness = 40 * cm;
+    G4double Thickness = 20 * cm;
     //double SizeZ;
     G4double PosZ = 0;
 
     //............... EMCAL Crystals modules ......................
-    G4double PWO_Thickness = 40. * cm;
+    G4double PWO_Thickness = 50. * cm;
     G4double PWO_Width = 2. * cm;
     G4double PWO_Gap = 0.01 * mm;
     G4double PWO_InnerR = 15. * cm;
@@ -181,6 +181,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     //  Crystalner arandzin
 
 
+    NofLayers = 0;
     
     auto PWO_Solid = new G4Box("Crystal",PWO_Width * 0.5 , PWO_Width * 0.5 ,PWO_Thickness * 0.5);
     auto PWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
@@ -188,6 +189,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     
     for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
+                    NofLayers++;
                     std::stringstream sstm;
                     sstm << "pwo_phys_" << i*j;
                     std::string name = sstm.str();
@@ -197,7 +199,14 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
         }
     }
 
-    
+ //   new G4PVPlacement(nullptr, G4ThreeVector(0,0, PWO_PosZ), PWO_LV,'name', worldLV, false, fCheckOverlaps);
+
+
+    auto CrystalVisAttr = new G4VisAttributes(G4Color(0.3, 0.5, 0.9, 0.9));
+    CrystalVisAttr->SetLineWidth(1);
+    CrystalVisAttr->SetForceSolid(false);
+    PWO_LV->SetVisAttributes(CrystalVisAttr);
+
     /*
     static char abname[256];
     PWO_PosZ = Thickness / 2 - PWO_Thickness / 2;
@@ -415,7 +424,6 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
             }
         }
 */
-NofLayers = 100;
 
 return worldPV;
 }
