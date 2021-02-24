@@ -6,31 +6,49 @@
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
 #include "G4Threading.hh"
+#include "G4LogicalVolume.hh"
+
+class G4AttDef;
+class G4AttValue;
 
 class DetectorHit : public G4VHit
 {
   public:
     DetectorHit();
-    DetectorHit(const DetectorHit&);
+    DetectorHit(G4int iCol,G4int iRow);
+    DetectorHit(const DetectorHit &right);
     virtual ~DetectorHit();
 
-    const DetectorHit& operator=(const DetectorHit&);
-    G4bool operator==(const DetectorHit&) const;
+    const DetectorHit& operator=(const DetectorHit& right);
+    G4bool operator==(const DetectorHit& right) const;
 
     inline void* operator new(size_t);
     inline void  operator delete(void*);
 
     virtual void Draw() {}
+    virtual const std::map<G4String,G4AttDef>* GetAttDefs() const;
+    virtual std::vector<G4AttValue>* CreateAttValues() const;
     virtual void Print();
 
-    void Add(G4double de, G4double dl);
+    void SetColumnID(G4int z) { fColumnID = z; }
+    G4int GetColumnID() const { return fColumnID; }
 
-    G4double GetEdep() const;
-    G4double GetTrackLength() const;
-      
+    void SetRowID(G4int z) { fRowID = z; }
+    G4int GetRowID() const { return fRowID; }
+
+    void SetEdep(G4double de) { fEdep = de; }
+    void AddEdep(G4double de) { fEdep += de; }
+    G4double GetEdep() const { return fEdep; }
+
+
+    void AddNpe(){ fNpe +=1; }
+    G4double GetNpe() const { return fNpe; }
+
   private:
-    G4double fEdep;        // Energy deposition
-    G4double fTrackLength; // Track length
+    G4int fColumnID;
+    G4int fRowID;
+    G4double fEdep;
+    G4int fNpe;
 };
 using CalorHitsCollection = G4THitsCollection<DetectorHit>;
 
@@ -53,17 +71,5 @@ inline void DetectorHit::operator delete(void *hit)
     }
     CalorHitAllocator->FreeSingle((DetectorHit*) hit);
 }
-
-inline void DetectorHit::Add(G4double de, G4double dl){
-    fEdep += de;
-    fTrackLength += dl;
-}
-inline G4double DetectorHit::GetEdep() const{
-    return fEdep;
-}
-inline G4double DetectorHit::GetTrackLength() const{
-    return fTrackLength;
-}
-
 
 #endif

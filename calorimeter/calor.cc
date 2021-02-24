@@ -77,9 +77,9 @@ int main(int argc,char** argv)
   physicsList->SetCutValue(3.5*cm, "gamma");
   physicsList->SetCutValue(0.085*mm, "e-");
   physicsList->SetCutValue(0.085*mm, "e+");
-
-  physicsList->RegisterPhysics(new AddOptics("Cerenkov & Scintillation") );
-  */
+*/
+   physicsList->RegisterPhysics(new AddOptics("Cerenkov & Scintillation") );
+  
   runManager->SetUserInitialization(physicsList);
     
   auto actionInitialization = new Action();
