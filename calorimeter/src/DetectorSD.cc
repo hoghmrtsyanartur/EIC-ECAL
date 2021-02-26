@@ -18,12 +18,13 @@
 #include "G4Gamma.hh"
 #include "G4Electron.hh"
 #include "G4Track.hh"
+#include "Connstants.hh"
 
 DetectorSD::DetectorSD(G4String name)
 :G4VSensitiveDetector(name),
  fHitsCollection(nullptr),fHCID(-1)
 {
-	collectionName.insert("HadColl");
+	collectionName.insert("Coll");
 }
 DetectorSD::~DetectorSD()
 {}
@@ -36,8 +37,8 @@ void DetectorSD::Initialize(G4HCofThisEvent* hce)
     hce->AddHitsCollection( hcID, fHitsCollection ); 
 }
 
-    for (auto column=0; column<5; column++ ) {
-    	for(auto row=0;row<5;row++){
+    for (auto column=0; column<kNofColumns; column++ ) {
+    	for(auto row=0;row<kNofRows;row++){
    		fHitsCollection->insert(new DetectorHit());
    	    }
     }
@@ -52,7 +53,7 @@ G4bool DetectorSD::ProcessHits(G4Step* step,G4TouchableHistory* /*history*/)
 
 	auto rowNo = touchable->GetCopyNumber(0);
 	auto columnNo = touchable->GetCopyNumber(1);
-	auto hitID = 5*columnNo+rowNo;
+	auto hitID = kNofRows*columnNo+rowNo;
 	auto hit = (*fHitsCollection)[hitID];
 
 	if(!hit){
@@ -66,9 +67,25 @@ G4bool DetectorSD::ProcessHits(G4Step* step,G4TouchableHistory* /*history*/)
 		hit->SetColumnID(columnNo);
    		hit->SetRowID(rowNo);
 	}
-
+    
     hit->AddEdep(edep);
       
+    G4OpBoundaryProcessStatus boundaryStatus=Undefined;
+    static G4OpBoundaryProcess* boundary=NULL;
+  //find the boundary process only once
+     if(!boundary){
+    G4ProcessManager* pm 
+      = step->GetTrack()->GetDefinition()->GetProcessManager();
+    G4int nprocesses = pm->GetProcessListLength();
+    G4ProcessVector* pv = pm->GetProcessList();
+    G4int i;
+    for( i=0;i<nprocesses;i++){
+      if((*pv)[i]->GetProcessName()=="OpBoundary"){
+        boundary = (G4OpBoundaryProcess*)(*pv)[i];
+        break;
+      }
+    }
+  }
     G4ParticleDefinition* particleType = step->GetTrack()->GetDefinition();
 	if(particleType==G4OpticalPhoton::OpticalPhotonDefinition()){
  	   if(step->GetTrack()->GetParentID()>0){

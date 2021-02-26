@@ -1,4 +1,9 @@
 #include "Run.hh"
+
+#include "G4Run.hh"
+#include "G4RunManager.hh"
+#include "G4UnitsTable.hh"
+#include "Run.hh"
 #include "Event.hh"
 
 #include "G4Run.hh"
@@ -12,22 +17,17 @@ Run::Run(Event* event)
  : G4UserRunAction(),
  fEvent(event)
 { 
-	auto analysisManager = G4AnalysisManager::Instance();
+  auto analysisManager = G4AnalysisManager::Instance();
   analysisManager->SetVerboseLevel(1);
 
   analysisManager->SetNtupleMerging(true);
-	analysisManager->SetFileName("Call");
+  analysisManager->SetFileName("Call");
 
   if(fEvent){
     analysisManager->CreateNtuple("Call", "Hits");
     analysisManager->CreateNtupleDColumn("Total"); // column Id = 0
-    analysisManager->CreateNtupleDColumn("Branch");
     analysisManager->CreateNtupleDColumn("photonner");
-  //  analysisManager->CreateNtupleDColumn("1"); // column Id = 1
-  //  analysisManager->CreateNtupleDColumn("2");
- //   analysisManager->CreateNtupleDColumn("HCEnergyVector", fEvent->GetHadCalEdep());
     analysisManager->FinishNtuple();
-   // analysisManager->SetNtupleFileName(0, "B4ntuple");
   }
 }
 

@@ -55,7 +55,7 @@ Event::~Event()
 void Event::BeginOfEventAction(const G4Event*)
 {
    auto sdManager = G4SDManager::GetSDMpointer();
-   G4String cHCName = "HadCalorimeter/HadColl";
+   G4String cHCName = "Calorimeter/Coll";
    fCalHCID = sdManager->GetCollectionID(cHCName);
 }
 void Event::EndOfEventAction(const G4Event* event)
@@ -64,7 +64,6 @@ void Event::EndOfEventAction(const G4Event* event)
 
   // G4int totalCalHit = 0; 
    G4double totalCalEdep = 0;
-   G4double Calu = 0;
    G4double totalNpe = 0;
 
 
@@ -72,7 +71,6 @@ void Event::EndOfEventAction(const G4Event* event)
    if ( ! hc ) return;
 
    G4double edep = 0.;
-   G4double edepu = 0.;
    G4double Npe = 0.;
    for (unsigned long i = 0; i < hc->GetSize(); ++i) {
       
@@ -83,16 +81,10 @@ void Event::EndOfEventAction(const G4Event* event)
         totalCalEdep += edep;
         totalNpe += Npe;
       }
-        auto arandz = static_cast<DetectorHit*>(hc->GetHit(10));
-        edepu = arandz->GetEdep();
-        if(edepu >0.){
-          Calu +=edepu;
-        }
     //  fCalEdep[i] = edep;
     }
     analysisManager->FillNtupleDColumn(0, totalCalEdep);
-    analysisManager->FillNtupleDColumn(1, Calu);
-    analysisManager->FillNtupleDColumn(2, totalNpe);
+    analysisManager->FillNtupleDColumn(1, totalNpe);
   analysisManager->AddNtupleRow();
 }
 
@@ -104,5 +96,4 @@ void Event::EndOfEventAction(const G4Event* event)
     analysisManager->FillNtupleDColumn(iDet + 2, totalCalEdep[iDet]);
   }
   
-
 */

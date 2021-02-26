@@ -99,7 +99,7 @@ G4double wlPbWO4[52] = {675.,
   G4double kphotPbWO4[52];
   for (G4int i=0; i<52; i++) kphotPbWO4[i] = hc/wlPbWO4[i];
 
- /* G4double abslength[52] = {
+  G4double abslength[52] = {
     1400.,
     1400.,1400.,1400.,1400.,1400.,1400.,1400.,933.3,933.3,933.3,
     933.3,933.3,933.3,933.3,933.3,933.3,700.0,700.0,622.2,560.0,
@@ -110,14 +110,14 @@ G4double wlPbWO4[52] = {675.,
 
   for (G4int i=0; i<52; i++) {
     abslength[i] *= cm;
-  };*/
+  };
 
   G4double rindPbWO4[52];
   for (G4int i=0; i<52; i++) {
     rindPbWO4[i] = 2.2;             
   };
   
- /* G4double wlPbWO4_sc_fast[82] = {
+  G4double wlPbWO4_sc_fast[82] = {
     630.,
     626.,622.,618.,614.,610.,606.,602.,598.,594.,590.,
     586.,582.,578.,574.,570.,566.,562.,558.,554.,550.,
@@ -155,20 +155,20 @@ G4double wlPbWO4[52] = {675.,
   G4double PbWO4_sc_slow[82];
   for (G4int i=0; i<82; i++) PbWO4_sc_slow[i] = PbWO4_sc_fast[i];
 
- */ //PbWO4 material properties table.
+  //PbWO4 material properties table.
     
   G4MaterialPropertiesTable *PbWO4MPT = new G4MaterialPropertiesTable();
   
   PbWO4MPT -> AddProperty("RINDEX",kphotPbWO4,rindPbWO4,52);
-  //PbWO4MPT -> AddProperty("ABSLENGTH",kphotPbWO4,abslength,52);
+  PbWO4MPT -> AddProperty("ABSLENGTH",kphotPbWO4,abslength,52);
 
-  //PbWO4MPT->AddProperty("FASTCOMPONENT",kphotPbWO4_sc_fast,PbWO4_sc_fast,82);
-  //PbWO4MPT->AddProperty("SLOWCOMPONENT",kphotPbWO4_sc_slow,PbWO4_sc_slow,82);
-  //PbWO4MPT->AddConstProperty("SCINTILLATIONYIELD", 40000*0.377/100/MeV);
-  //PbWO4MPT->AddConstProperty("RESOLUTIONSCALE", 1.0);
-  //PbWO4MPT->AddConstProperty("FASTTIMECONSTANT", 10.*ns);
-  //PbWO4MPT->AddConstProperty("SLOWTIMECONSTANT", 30.*ns);
-  //PbWO4MPT->AddConstProperty("YIELDRATIO", 0.077/(0.077+0.3));
+  PbWO4MPT->AddProperty("FASTCOMPONENT",kphotPbWO4_sc_fast,PbWO4_sc_fast,82);
+  PbWO4MPT->AddProperty("SLOWCOMPONENT",kphotPbWO4_sc_slow,PbWO4_sc_slow,82);
+  PbWO4MPT->AddConstProperty("SCINTILLATIONYIELD", 40000*0.377/100/MeV);
+  PbWO4MPT->AddConstProperty("RESOLUTIONSCALE", 1.0);
+  PbWO4MPT->AddConstProperty("FASTTIMECONSTANT", 10.*ns);
+  PbWO4MPT->AddConstProperty("SLOWTIMECONSTANT", 30.*ns);
+  PbWO4MPT->AddConstProperty("YIELDRATIO", 0.077/(0.077+0.3));
 
   PbWO4->SetMaterialPropertiesTable(PbWO4MPT);
 }
@@ -544,7 +544,7 @@ void DetectorConstruction::ConstructSDandField()
   G4SDManager::GetSDMpointer()->AddNewDetector(CrystalSD);
   SetSensitiveDetector("CrystalLV",CrystalSD);*/
 
-  auto hadCalorimeter = new DetectorSD(SDname="/HadCalorimeter");
+  auto hadCalorimeter = new DetectorSD(SDname="/Calorimeter");
   sdManager->AddNewDetector(hadCalorimeter);
   fPWO_LV->SetSensitiveDetector(hadCalorimeter);
   
