@@ -1,5 +1,5 @@
 /run/initialize		# պարտադիր է,առանց սրա չի աշխատի
 /gun/particle gamma 		# էլեկտրոն - e-
-/gun/energy 10 		# կողքը Gev,Mev չի հասկանում,մենակ թիվ պետք է լինի,Gev-երով է
+/gun/energy 10 		# կողքը Gev,Mev չի հասկանում,մենակ թիվ պետք է լինի,Gev-երով 
 /run/printProgress 100 	# թե քանի թիվը մեկ տպի տերմինալում
 /run/beamOn 1000            	# printProgress-ից հետո միշտ պետք է լինի

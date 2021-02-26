@@ -7,6 +7,7 @@
 
 class G4VPhysicalVolume;
 class G4GlobalMagFieldMessenger;
+class G4VSensitiveDetector;
 
 
 
@@ -32,6 +33,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
                                       // magnetic field messenger
     G4bool  fCheckOverlaps;
     G4int   NofLayers;
+    G4LogicalVolume* fPWO_LV;
 };
 
 #endif

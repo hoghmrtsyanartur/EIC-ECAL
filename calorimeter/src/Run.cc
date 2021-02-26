@@ -1,29 +1,34 @@
 #include "Run.hh"
-#include "Analysis.hh"
 
 #include "G4Run.hh"
 #include "G4RunManager.hh"
 #include "G4UnitsTable.hh"
+#include "Run.hh"
+#include "Event.hh"
+
+#include "G4Run.hh"
+#include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4GenericAnalysisManager.hh"
 
-Run::Run()
- : G4UserRunAction()
+using G4AnalysisManager = G4GenericAnalysisManager;
+
+Run::Run(Event* event)
+ : G4UserRunAction(),
+ fEvent(event)
 { 
-	G4RunManager::GetRunManager()->SetPrintProgress(1);
+  auto analysisManager = G4AnalysisManager::Instance();
+  analysisManager->SetVerboseLevel(1);
 
-	auto analysisManager = G4AnalysisManager::Instance();
-    G4cout << "Using " << analysisManager->GetType() << G4endl;
+  analysisManager->SetNtupleMerging(true);
+  analysisManager->SetFileName("Call");
 
-    analysisManager->SetVerboseLevel(1);
-    analysisManager->SetNtupleMerging(true);
-
-    analysisManager->CreateH1("ECryst","Edep in Crystals", 100, 0., 100*GeV);
-    analysisManager->CreateH1("LCryst","trackL in Crystals", 100, 0., 150*m);
-
-    analysisManager->CreateNtuple("Calorimeter", "Edep and TrackL");
-    analysisManager->CreateNtupleDColumn("ECryst");
-    analysisManager->CreateNtupleDColumn("LCryst");
+  if(fEvent){
+    analysisManager->CreateNtuple("Call", "Hits");
+    analysisManager->CreateNtupleDColumn("Total"); // column Id = 0
+    analysisManager->CreateNtupleDColumn("photonner");
     analysisManager->FinishNtuple();
+  }
 }
 
 Run::~Run()
@@ -35,35 +40,12 @@ void Run::BeginOfRunAction(const G4Run* /*run*/)
  
   auto analysisManager = G4AnalysisManager::Instance();
 
-  
-  G4String fileName = "Calorimeter";
-  analysisManager->OpenFile(fileName);
+  analysisManager->OpenFile();
 }
 void Run::EndOfRunAction(const G4Run* /*run*/)
 {
-  
   auto analysisManager = G4AnalysisManager::Instance();
-  if ( analysisManager->GetH1(1) ) {
-    G4cout << G4endl << " ----> print histograms statistic ";
-    /*
-    if(isMaster) {
-      G4cout << "for the entire run " << G4endl << G4endl; 
-    }
-    else {
-      G4cout << "for the local thread " << G4endl << G4endl; 
-    }*/
-    
-    G4cout << " ECryst : mean = " 
-       << G4BestUnit(analysisManager->GetH1(0)->mean(), "Energy") 
-       << " rms = " 
-       << G4BestUnit(analysisManager->GetH1(0)->rms(),  "Energy") << G4endl;
-    
-    G4cout << " LCryst : mean = " 
-      << G4BestUnit(analysisManager->GetH1(1)->mean(), "Length") 
-      << " rms = " 
-      << G4BestUnit(analysisManager->GetH1(1)->rms(),  "Length") << G4endl;
-  }
-
   analysisManager->Write();
   analysisManager->CloseFile();
+  
 }

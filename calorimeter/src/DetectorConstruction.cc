@@ -1,16 +1,17 @@
 #include "DetectorConstruction.hh"
 #include "DetectorSD.hh"
+
 #include "G4Material.hh"
 #include "G4NistManager.hh"
-
 #include "G4Box.hh"
 #include "G4Tubs.hh"
 #include "G4LogicalVolume.hh"
+#include "G4VPhysicalVolume.hh"
 #include "G4PVPlacement.hh"
 #include "G4PVReplica.hh"
 #include "G4GlobalMagFieldMessenger.hh"
 #include "G4AutoDelete.hh"
-
+#include "G4VSensitiveDetector.hh"
 
 #include <vector>
 #include "G4SDManager.hh"
@@ -21,6 +22,7 @@
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 
+#include "G4PVDivision.hh"
 #include "G4GenericMessenger.hh"
 G4ThreadLocal 
 G4GlobalMagFieldMessenger* DetectorConstruction::fMagFieldMessenger = 0;
@@ -29,7 +31,8 @@ G4GlobalMagFieldMessenger* DetectorConstruction::fMagFieldMessenger = 0;
 DetectorConstruction::DetectorConstruction()
 :   G4VUserDetectorConstruction(),
     fCheckOverlaps(true),
-    NofLayers(-1)
+    NofLayers(-1),
+    fPWO_LV(nullptr)
 {
 }
 
@@ -81,28 +84,114 @@ void DetectorConstruction::DefineMaterials()
     DSBCe->AddElement(elO, natoms = 5);
     DSBCe->AddElement(elBa, natoms = 1);
     DSBCe->AddElement(elSi, natoms = 2);
-}
+    
+G4double wlPbWO4[52] = {675.,
+              670.,660.,650.,640.,630.,620.,610.,600.,590.,580.,
+              570.,560.,550.,540.,530.,520.,510.,500.,490.,480.,
+              470.,460.,450.,440.,430.,420.,410.,400.,390.,380.,
+              370.,360.,350.,340.,330.,320.,310.,300.,290.,280.,
+              270.,260.,250.,240.,230.,220.,210.,200.,190.,180.,
+              175.}; 
+  for (G4int i=0; i<52; i++) wlPbWO4[i] *= nanometer;
 
+  const G4double hc = 1.239841857E-6*m*eV;
+    
+  G4double kphotPbWO4[52];
+  for (G4int i=0; i<52; i++) kphotPbWO4[i] = hc/wlPbWO4[i];
+
+  G4double abslength[52] = {
+    1400.,
+    1400.,1400.,1400.,1400.,1400.,1400.,1400.,933.3,933.3,933.3,
+    933.3,933.3,933.3,933.3,933.3,933.3,700.0,700.0,622.2,560.0,
+    560.0,466.6,350.0,280.0,233.3,175.0,151.3,112.0,71.79,45.52,
+    29.62,17.07,10.17,6.026,3.557,2.092,1.227,0.717,0.418,0.243,
+    0.140,0.081,0.047,0.027,0.016,0.009,0.005,0.003,0.002,0.001,
+    0.000711281};
+
+  for (G4int i=0; i<52; i++) {
+    abslength[i] *= cm;
+  };
+
+  G4double rindPbWO4[52];
+  for (G4int i=0; i<52; i++) {
+    rindPbWO4[i] = 2.2;             
+  };
+  
+  G4double wlPbWO4_sc_fast[82] = {
+    630.,
+    626.,622.,618.,614.,610.,606.,602.,598.,594.,590.,
+    586.,582.,578.,574.,570.,566.,562.,558.,554.,550.,
+    546.,542.,538.,534.,530.,526.,522.,518.,514.,510.,
+    506.,502.,498.,494.,490.,486.,482.,478.,474.,470.,
+    466.,462.,458.,454.,450.,446.,442.,438.,434.,430.,
+    426.,422.,418.,414.,410.,406.,402.,398.,394.,390.,
+    386.,382.,378.,374.,370.,366.,362.,358.,354.,350.,
+    346.,342.,338.,334.,330.,326.,322.,318.,314.,310.,
+    306.};
+
+    G4double wlPbWO4_sc_slow[82];
+  for (G4int i=0; i<82; i++) wlPbWO4_sc_slow[i] =  wlPbWO4_sc_fast[i] + 5.;
+  
+  for (G4int i=0; i<82; i++) wlPbWO4_sc_fast[i] *= nanometer;
+  for (G4int i=0; i<82; i++) wlPbWO4_sc_slow[i] *= nanometer;
+
+  G4double kphotPbWO4_sc_fast[82];
+  G4double kphotPbWO4_sc_slow[82];
+  for (G4int i=0; i<82; i++) kphotPbWO4_sc_fast[i] = hc/wlPbWO4_sc_fast[i];
+  for (G4int i=0; i<82; i++) kphotPbWO4_sc_slow[i] = hc/wlPbWO4_sc_slow[i];
+
+  G4double PbWO4_sc_fast[82] = {
+    0.,
+    0.019,0.045,0.064,0.058,0.058,0.064,0.070,0.064,0.064,0.064,
+    0.070,0.070,0.090,0.077,0.096,0.122,0.109,0.141,0.134,0.154,
+    0.186,0.166,0.192,0.205,0.218,0.243,0.256,0.269,0.288,0.320,
+    0.358,0.390,0.416,0.429,0.467,0.512,0.544,0.589,0.627,0.640,
+    0.704,0.730,0.774,0.794,0.838,0.870,0.909,0.928,0.934,0.986,
+    0.979,0.998,0.992,0.986,0.973,0.941,0.902,0.870,0.819,0.787,
+    0.730,0.691,0.653,0.589,0.538,0.461,0.410,0.326,0.282,0.224,
+    0.173,0.102,0.070,0.051,0.013,0.000,0.000,0.000,0.000,0.000,
+    0.000};
+
+  G4double PbWO4_sc_slow[82];
+  for (G4int i=0; i<82; i++) PbWO4_sc_slow[i] = PbWO4_sc_fast[i];
+
+  //PbWO4 material properties table.
+    
+  G4MaterialPropertiesTable *PbWO4MPT = new G4MaterialPropertiesTable();
+  
+  PbWO4MPT -> AddProperty("RINDEX",kphotPbWO4,rindPbWO4,52);
+  PbWO4MPT -> AddProperty("ABSLENGTH",kphotPbWO4,abslength,52);
+
+  PbWO4MPT->AddProperty("FASTCOMPONENT",kphotPbWO4_sc_fast,PbWO4_sc_fast,82);
+  PbWO4MPT->AddProperty("SLOWCOMPONENT",kphotPbWO4_sc_slow,PbWO4_sc_slow,82);
+  PbWO4MPT->AddConstProperty("SCINTILLATIONYIELD", 40000*0.377/100/MeV);
+  PbWO4MPT->AddConstProperty("RESOLUTIONSCALE", 1.0);
+  PbWO4MPT->AddConstProperty("FASTTIMECONSTANT", 10.*ns);
+  PbWO4MPT->AddConstProperty("SLOWTIMECONSTANT", 30.*ns);
+  PbWO4MPT->AddConstProperty("YIELDRATIO", 0.077/(0.077+0.3));
+
+  PbWO4->SetMaterialPropertiesTable(PbWO4MPT);
+}
 G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 {
 
 
 
 
-    G4double RIn = 15 * cm;
+   // G4double RIn = 15 * cm;
     G4double ROut = 120 *cm;
     //G4double ROutshift = 5 * cm;
-    G4double Thickness = 20 * cm;
+   // G4double Thickness = 20 * cm;
     //double SizeZ;
-    G4double PosZ = 0;
+   // G4double PosZ = 0;
 
     //............... EMCAL Crystals modules ......................
     G4double PWO_Thickness = 50. * cm;
     G4double PWO_Width = 2. * cm;
     G4double PWO_Gap = 0.01 * mm;
-    G4double PWO_InnerR = 15. * cm;
-    G4double PWO_OuterR = 82. * cm;
-    G4double PWO_PosZ = 0;
+   // G4double PWO_InnerR = 15. * cm;
+   // G4double PWO_OuterR = 82. * cm;
+   // G4double PWO_PosZ = 0;
 
     G4GenericMessenger *Messenger = new G4GenericMessenger(this, "/EMCAL/");
             Messenger->DeclareProperty("pwoThickness", PWO_Thickness, "Thikness (z direction dimention) of PWO crystals ");
@@ -180,24 +269,44 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
     //  Crystalner arandzin
 
+    NofLayers=5;
 
-    NofLayers = 0;
-    
-    auto PWO_Solid = new G4Box("Crystal",PWO_Width * 0.5 , PWO_Width * 0.5 ,PWO_Thickness * 0.5);
-    auto PWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
+    G4double antes_xy = NofLayers*PWO_Width;
+    G4double antes_x = PWO_Width;
 
     
-    for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
-                    NofLayers++;
-                    std::stringstream sstm;
-                    sstm << "pwo_phys_" << i*j;
-                    std::string name = sstm.str();
-                    double x = i*(PWO_Width+PWO_Gap);
-                    double y = j*(PWO_Width+PWO_Gap);
-                    new G4PVPlacement(nullptr, G4ThreeVector(x-PWO_Width-PWO_Gap,y-PWO_Width-PWO_Gap, PWO_PosZ), PWO_LV,name, worldLV, false, fCheckOverlaps);
-        }
-    }
+    auto antesg_s = new G4Box("gantes",antes_xy*0.5,antes_xy*0.5,PWO_Thickness*0.5);
+    auto antesg_lv = new G4LogicalVolume(antesg_s,defaultMaterial,"antesg_LV");
+    new G4PVPlacement(nullptr,G4ThreeVector(),antesg_lv,"antes_gp",worldLV,false,fCheckOverlaps);
+
+    auto antes_s = new G4Box("antes",antes_x*0.5,antes_xy*0.5,PWO_Thickness*0.5);
+    auto antes_lv = new G4LogicalVolume(antes_s,defaultMaterial,"antes_LV");
+ //   new G4PVPlacement(nullptr,G4ThreeVector(0,0,0),antes_lv,"antes_p",antesg_lv,false,fCheckOverlaps);
+
+      new G4PVDivision(
+                      "divizion",
+                      antes_lv,
+                      antesg_lv,
+                      kXAxis,
+                      NofLayers,
+                      PWO_Width,
+                      0);
+     
+
+
+    auto PWO_Solid = new G4Box("Crystal",antes_x*0.5,antes_x*0.5,PWO_Thickness*0.5);
+    fPWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
+
+    new G4PVDivision(
+                      "divizia",
+                      fPWO_LV,
+                      antes_lv,
+                      kYAxis,
+                      NofLayers,
+                      PWO_Width,
+                      0);
+    
+    
 
  //   new G4PVPlacement(nullptr, G4ThreeVector(0,0, PWO_PosZ), PWO_LV,'name', worldLV, false, fCheckOverlaps);
 
@@ -205,7 +314,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     auto CrystalVisAttr = new G4VisAttributes(G4Color(0.3, 0.5, 0.9, 0.9));
     CrystalVisAttr->SetLineWidth(1);
     CrystalVisAttr->SetForceSolid(false);
-    PWO_LV->SetVisAttributes(CrystalVisAttr);
+    fPWO_LV->SetVisAttributes(CrystalVisAttr);
 
     /*
     static char abname[256];
@@ -401,7 +510,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
     towerIndex = 0;
         for(int rowIndex=0; rowIndex < towersInRow; rowIndex++) {
-            for(int colIndex=0; colIndex < towersInRow; colIndex++) {
+            for(NofLayers++;int colIndex=0; colIndex < towersInRow; colIndex++) {
                 double x = leftTowerPos + colIndex * (Glass_Width + Glass_Gap);
                 double y = topTowerPos + rowIndex * (Glass_Width + Glass_Gap);
                 double r = sqrt(x * x + y * y);
@@ -429,10 +538,15 @@ return worldPV;
 }
 void DetectorConstruction::ConstructSDandField()
 {
-
-  auto CrystalSD= new DetectorSD("CrystalSD", "CrystalHitsCollection",NofLayers);
+  auto sdManager = G4SDManager::GetSDMpointer();
+  G4String SDname;
+ /* auto CrystalSD= new DetectorSD("CrystalSD", "CrystalHitsCollection",NofLayers);
   G4SDManager::GetSDMpointer()->AddNewDetector(CrystalSD);
-  SetSensitiveDetector("CrystalLV",CrystalSD);
+  SetSensitiveDetector("CrystalLV",CrystalSD);*/
+
+  auto hadCalorimeter = new DetectorSD(SDname="/Calorimeter");
+  sdManager->AddNewDetector(hadCalorimeter);
+  fPWO_LV->SetSensitiveDetector(hadCalorimeter);
   
 
   G4ThreeVector fieldValue;

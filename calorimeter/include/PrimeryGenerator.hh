@@ -14,6 +14,9 @@ public:
   virtual ~PrimaryGenerator();
 
   virtual void GeneratePrimaries(G4Event* event);
+
+  void SetOptPhotonPolar();
+  void SetOptPhotonPolar(G4double);
   
   // set methods
   void SetRandomFlag(G4bool value);

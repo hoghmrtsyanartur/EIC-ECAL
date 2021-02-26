@@ -15,13 +15,15 @@ Action::~Action()
 
 void Action::BuildForMaster() const
 {
-  SetUserAction(new Run);
+  Event* event = new Event;
+  SetUserAction(new Run(event));
 }
 
 
 void Action::Build() const
 {
   SetUserAction(new PrimaryGenerator);
-  SetUserAction(new Run);
+  auto event = new Event;
   SetUserAction(new Event);
+  SetUserAction(new Run(event));
 }  

@@ -2,10 +2,13 @@
 #define Event_h 1
 
 #include "G4UserEventAction.hh"
-
-#include "DetectorHit.hh"
-
 #include "globals.hh"
+
+#include <vector>
+#include <array>
+
+const G4int kHad = 1;
+const G4int kDim = 2;
 
 class Event : public G4UserEventAction
 {
@@ -15,14 +18,11 @@ public:
 
   virtual void  BeginOfEventAction(const G4Event* event);
   virtual void    EndOfEventAction(const G4Event* event);
-    
-private:
-  // methods
-  CalorHitsCollection* GetHitsCollection(G4int hcID,const G4Event* event) const;
-  void PrintEventStatistics(G4double CrystalEdep, G4double CrystalTrackLength) const;
   
-  // data members                   
-  G4int  fCrystHCID;
+  std::vector<G4double>& GetHadCalEdep() { return fCalEdep[kHad]; }
+private:
+  G4int fCalHCID;
+  std::array<std::vector<G4double>, 1> fCalEdep;
 
 };
                      
