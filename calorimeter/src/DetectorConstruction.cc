@@ -22,7 +22,7 @@
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 
-#include "G4PVDivision.hh"
+#include "G4ReplicatedSlice.hh"
 #include "G4GenericMessenger.hh"
 G4ThreadLocal 
 G4GlobalMagFieldMessenger* DetectorConstruction::fMagFieldMessenger = 0;
@@ -269,11 +269,10 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
     //  Crystalner arandzin
 
-    NofLayers=5;
+    NofLayers=3;
 
     G4double antes_xy = NofLayers*PWO_Width;
     G4double antes_x = PWO_Width;
-
     
     auto antesg_s = new G4Box("gantes",antes_xy*0.5,antes_xy*0.5,PWO_Thickness*0.5);
     auto antesg_lv = new G4LogicalVolume(antesg_s,defaultMaterial,"antesg_LV");
@@ -283,13 +282,14 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     auto antes_lv = new G4LogicalVolume(antes_s,defaultMaterial,"antes_LV");
  //   new G4PVPlacement(nullptr,G4ThreeVector(0,0,0),antes_lv,"antes_p",antesg_lv,false,fCheckOverlaps);
 
-      new G4PVDivision(
+      new G4ReplicatedSlice(
                       "divizion",
                       antes_lv,
                       antesg_lv,
                       kXAxis,
                       NofLayers,
                       PWO_Width,
+                      PWO_Gap/2,
                       0);
      
 
@@ -297,13 +297,14 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     auto PWO_Solid = new G4Box("Crystal",antes_x*0.5,antes_x*0.5,PWO_Thickness*0.5);
     fPWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
 
-    new G4PVDivision(
+    new G4ReplicatedSlice(
                       "divizia",
                       fPWO_LV,
                       antes_lv,
                       kYAxis,
                       NofLayers,
                       PWO_Width,
+                      PWO_Gap/2,
                       0);
     
     
