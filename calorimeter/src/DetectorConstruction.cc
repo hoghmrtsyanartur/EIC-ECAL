@@ -24,6 +24,7 @@
 
 #include "G4ReplicatedSlice.hh"
 #include "G4GenericMessenger.hh"
+#include "Connstants.hh"
 G4ThreadLocal 
 G4GlobalMagFieldMessenger* DetectorConstruction::fMagFieldMessenger = 0;
 
@@ -31,7 +32,6 @@ G4GlobalMagFieldMessenger* DetectorConstruction::fMagFieldMessenger = 0;
 DetectorConstruction::DetectorConstruction()
 :   G4VUserDetectorConstruction(),
     fCheckOverlaps(true),
-    NofLayers(-1),
     fPWO_LV(nullptr)
 {
 }
@@ -269,9 +269,8 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
     //  Crystalner arandzin
 
-    NofLayers=3;
 
-    G4double antes_xy = NofLayers*PWO_Width;
+    G4double antes_xy = kNofColumns*PWO_Width;
     G4double antes_x = PWO_Width;
     
     auto antesg_s = new G4Box("gantes",antes_xy*0.5,antes_xy*0.5,PWO_Thickness*0.5);
@@ -287,7 +286,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
                       antes_lv,
                       antesg_lv,
                       kXAxis,
-                      NofLayers,
+                      kNofColumns,
                       PWO_Width,
                       PWO_Gap/2,
                       0);
@@ -302,7 +301,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
                       fPWO_LV,
                       antes_lv,
                       kYAxis,
-                      NofLayers,
+                      kNofRows,
                       PWO_Width,
                       PWO_Gap/2,
                       0);

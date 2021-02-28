@@ -32,7 +32,6 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     static G4ThreadLocal G4GlobalMagFieldMessenger*  fMagFieldMessenger; 
                                       // magnetic field messenger
     G4bool  fCheckOverlaps;
-    G4int   NofLayers;
     G4LogicalVolume* fPWO_LV;
 };
 
