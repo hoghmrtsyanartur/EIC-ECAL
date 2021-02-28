@@ -25,7 +25,7 @@ Run::Run(Event* event)
 
   if(fEvent){
     analysisManager->CreateNtuple("Call", "Hits");
-    analysisManager->CreateNtupleDColumn("Total"); // column Id = 0
+    analysisManager->CreateNtupleDColumn("ECryst"); // column Id = 0
     analysisManager->CreateNtupleDColumn("photonner");
     analysisManager->FinishNtuple();
   }

@@ -1,7 +1,6 @@
 # EIC-ECAL
 
 Կրիստալների մատրիցան 3X3-ից 5X5 փոխելու համար պետք է 
-src/DetectorConstruction.cc-ում NofLayers-հավասարեցնել 5-ի
 include/Connstants․hh-ում kNofRows,kNofColumns փոփոխականները հավասարեցնել 5-ի։
 
 

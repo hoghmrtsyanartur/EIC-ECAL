@@ -26,8 +26,11 @@ public:
     // here we can construct and register Cherenkov and other stuff.
     // Make sure nothing is there twice, though !!!
 
+    // photonneri arajacman processner
     theCerenkovProcess=new G4Cerenkov();
     theScintillationProcess=new G4Scintillation();
+
+    //photonner poxazdecutyan processner
     theAbsorptionProcess=new G4OpAbsorption();
     theRayleighScattering=new G4OpRayleigh();
     theBoundaryProcess=new G4OpBoundaryProcess();
@@ -50,10 +53,12 @@ public:
       }
       if (particle->GetParticleName() == "opticalphoton") {
 	G4cout << " AddDiscreteProcess to OpticalPhoton " << G4endl;
+
+
 	pManager->AddDiscreteProcess(theAbsorptionProcess);
 	pManager->AddDiscreteProcess(theRayleighScattering);
-	//	pmanager->AddDiscreteProcess(fMieHGScatteringProcess);
 	pManager->AddDiscreteProcess(theBoundaryProcess);
+  //  pmanager->AddDiscreteProcess(fMieHGScatteringProcess);
       }
 
     }
