@@ -1,0 +1,8 @@
+/home/artur/Geant/projects/EIC-ECAL/build/CMakeFiles/install/local.dir
+/home/artur/Geant/projects/EIC-ECAL/build/CMakeFiles/install.dir
+/home/artur/Geant/projects/EIC-ECAL/build/CMakeFiles/list_install_components.dir
+/home/artur/Geant/projects/EIC-ECAL/build/CMakeFiles/rebuild_cache.dir
+/home/artur/Geant/projects/EIC-ECAL/build/CMakeFiles/edit_cache.dir
+/home/artur/Geant/projects/EIC-ECAL/build/CMakeFiles/cal1.dir
+/home/artur/Geant/projects/EIC-ECAL/build/CMakeFiles/install/strip.dir
+/home/artur/Geant/projects/EIC-ECAL/build/CMakeFiles/calorimeter.dir

@@ -2,13 +2,13 @@
 #include "DetectorSD.hh"
 
 #include "G4Material.hh"
+#include "G4MaterialTable.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
 #include "G4Tubs.hh"
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
 #include "G4PVPlacement.hh"
-#include "G4PVReplica.hh"
 #include "G4GlobalMagFieldMessenger.hh"
 #include "G4AutoDelete.hh"
 #include "G4VSensitiveDetector.hh"
@@ -19,12 +19,24 @@
 #include "G4VisAttributes.hh"
 #include "G4Colour.hh"
 
+#include "G4SubtractionSolid.hh"
+
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 
 #include "G4ReplicatedSlice.hh"
 #include "G4GenericMessenger.hh"
 #include "Connstants.hh"
+
+#include "G4LogicalBorderSurface.hh"
+#include "G4LogicalSkinSurface.hh"
+#include "G4RotationMatrix.hh"
+#include "G4Transform3D.hh"
+#include "G4OpticalSurface.hh"
+
+#include <fstream>
+
+using namespace std;
 G4ThreadLocal 
 G4GlobalMagFieldMessenger* DetectorConstruction::fMagFieldMessenger = 0;
 
@@ -50,7 +62,86 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 }
 void DetectorConstruction::DefineMaterials()
 {
-// auto nistManager = G4NistManager::Instance();
+  ifstream fin;
+  fin.open("reflector.inp");
+
+  G4String line;
+  getline(fin,line); istringstream iss1(line);
+  iss1 >> air_gap;
+  getline(fin,line); istringstream iss2(line);
+  iss2 >> refFlag;
+  getline(fin,line); istringstream iss3(line);
+  iss3 >> refName;
+  getline(fin,line); istringstream iss4(line);
+  iss4 >> refNumData;
+  refWL = new G4double[refNumData];
+
+  //For the specular reflector, read real and imaginary parts of refractive
+  //index. For the diffuse reflector, read reflectivity.
+
+  if (refFlag!=0) {
+    refReIndex = new G4double[refNumData];
+    refImIndex = new G4double[refNumData];
+    for (G4int i=refNumData-1; i>-1; i--)
+      fin >> refWL[i] >> refReIndex[i] >> refImIndex[i];
+  }
+  else {
+    refRefl = new G4double[refNumData];
+    for (G4int i=refNumData-1; i>-1; i--)
+      fin >> refWL[i] >> refRefl[i];
+  }
+  
+  //Read refractive index of substrate of reflector.
+  fin >> subRefrIndex;
+  fin.close();
+
+  air_gap *= mm;
+
+  for (G4int i=0; i<refNumData; i++) refWL[i] *= nanometer;
+
+  //Print out parameters of reflector.
+    
+  G4cout << "DetectorConstruction::DetectorConstruction: input data:"
+    << G4endl;
+  G4cout << "   Air gap = " << 0.01/mm << " mm" << G4endl;
+  G4cout << "   Reflector: " << refName << ", refFlag = " << refFlag << ", ";
+  if (refFlag==0)
+    G4cout << "diffuse reflector";
+  else
+    G4cout << "specular reflector";
+  G4cout << "." << G4endl;
+
+  G4cout << "   Reflector data:" << G4endl;
+  for (G4int i=refNumData-1; i>-1; i--) {
+    G4cout << "   " << refWL[i]/nanometer << " ";
+    if (refFlag!=0)
+      G4cout  << refReIndex[i] << " " << refImIndex[i];
+    else
+      G4cout << refRefl[i];
+    G4cout << " " << i << G4endl;
+  };
+
+  G4cout << "   Substrate refr. index = " << subRefrIndex;
+  if (subRefrIndex == 0.)
+    G4cout << ", no substrate";
+  else
+    G4cout << ", substrate layer between crystal and reflector.";
+  G4cout << G4endl;
+
+
+
+  G4NistManager* man = G4NistManager::Instance();
+  //man->SetVerbose(1);
+
+  G4Element* H  = man->FindOrBuildElement("H");
+  G4Element* Si = man->FindOrBuildElement("Si");
+  G4Element* C  = man->FindOrBuildElement("C");
+  G4Element* O  = man->FindOrBuildElement("O");
+  G4Element* K  = man->FindOrBuildElement("K");
+  G4Element* N  = man->FindOrBuildElement("N");
+  G4Element* Cs = man->FindOrBuildElement("Cs");
+
+
   G4String name, symbol;
   G4double a;  // mass of a mole;
   G4double z;  // z=mean number of protons;  
@@ -171,12 +262,84 @@ G4double wlPbWO4[52] = {675.,
   PbWO4MPT->AddConstProperty("YIELDRATIO", 0.077/(0.077+0.3));
 
   PbWO4->SetMaterialPropertiesTable(PbWO4MPT);
+
+  //bazmapatkichnerr
+
+  // Glass
+  //
+
+  density = 2.23*g/cm3;   //Borosilicate glass (wikipedia)
+  G4Material* Glass = new G4Material("Glass", density, ncomponents=2);
+  Glass->AddElement(Si, 1);
+  Glass->AddElement(O,  2);
+
+  G4double rindGlass[52];
+  for (G4int i=0; i<52; i++) {
+    rindGlass[i] = 1.525;              //average of 1.51-1.54
+  };
+
+  G4MaterialPropertiesTable *GlassMPT = new G4MaterialPropertiesTable();
+  GlassMPT -> AddProperty("RINDEX",kphotPbWO4,rindGlass,52);
+  Glass -> SetMaterialPropertiesTable(GlassMPT);
+
+  // Optical grease BC630 from Bicron
+  //
+  density = 1.06*g/cm3;
+  G4Material* OpticalGlue = new G4Material("Silgard", density, ncomponents=1);
+  OpticalGlue->AddElement(Si, 1); //exact composition not known
+
+  G4double rindGlue[52];
+  for (G4int i=0; i<52; i++) {
+    rindGlue[i] = 1.465;
+  };
+
+  G4MaterialPropertiesTable *GlueMPT = new G4MaterialPropertiesTable();
+  GlueMPT -> AddProperty("RINDEX",kphotPbWO4,rindGlue,52);
+  OpticalGlue -> SetMaterialPropertiesTable(GlueMPT);
+
+  // Optical insulation
+  //
+  density = 1.5;   //approximately
+  G4Material* Polymer = new G4Material("Polymer", density, ncomponents=2);
+  Polymer->AddElement(C, 1);
+  Polymer->AddElement(H, 1);
+  //Mylar, reflector substrate material.
+  //
+  
+  G4Material* Mylar = new G4Material("Mylar", density= 1.40*g/cm3, ncomponents=3);
+  Mylar->AddElement(H, natoms=4);
+  Mylar->AddElement(C, natoms=5);
+  Mylar->AddElement(O, natoms=2);
+
+  if (subRefrIndex != 0.) {
+    
+    //Mylar refractive index.
+    G4double rindMylar[52];
+    for (G4int i=0; i<52; i++) {
+      rindMylar[i] = subRefrIndex;
+    };
+
+    G4MaterialPropertiesTable *MylarMPT = new G4MaterialPropertiesTable();
+    MylarMPT -> AddProperty("RINDEX",kphotPbWO4,rindMylar,52);
+    Mylar -> SetMaterialPropertiesTable(MylarMPT);
+  }
+
+  // Bialcali, the photochathode material
+  //
+
+  density = 1*g/cm3;   //Does not matter
+  G4Material* Bialcali = new G4Material("Bialcali", density, ncomponents=2);
+  Bialcali->AddElement(Cs, 1);
+  Bialcali->AddElement(K,  1);
+
+
+
 }
 G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 {
 
 
-
+    const G4double hc = 1.239841857E-6*m*eV; 
 
    // G4double RIn = 15 * cm;
     G4double ROut = 120 *cm;
@@ -192,6 +355,33 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
    // G4double PWO_InnerR = 15. * cm;
    // G4double PWO_OuterR = 82. * cm;
    // G4double PWO_PosZ = 0;
+    G4double tedlar_thick = 0.040*mm;
+    G4double mylar_thick = 0.025*mm;
+    G4double glue_thick = 0.035*mm;
+    //G4double air_gap = 0.035*mm;
+
+    G4double PMT_diameter = 1.86*cm;
+    G4double PMTWin_thick = 1*mm;
+
+    G4double Cathode_diam = 1.5*cm;
+    G4double Cathode_thick = 0.1*mm;
+  
+    G4double block_x = 2*cm;
+    G4double block_y = 2*cm;
+    G4double block_z = 20*cm;
+
+    G4double mylar_x = block_x + 2*PWO_Gap + 2*mylar_thick;
+    G4double mylar_y = block_y + 2*PWO_Gap+ 2*mylar_thick;
+    G4double mylar_z = block_z + 2*PWO_Gap + 2*mylar_thick;
+
+    G4double tedlar_x = mylar_x + 2*tedlar_thick;
+    G4double tedlar_y = mylar_y + 2*tedlar_thick;
+    G4double tedlar_z = mylar_z + 2*tedlar_thick;
+
+    G4double counter_x = tedlar_x;
+    G4double counter_y = tedlar_y;
+    G4double counter_z = tedlar_z + 2*glue_thick +  2*PMTWin_thick;
+
 
     G4GenericMessenger *Messenger = new G4GenericMessenger(this, "/EMCAL/");
             Messenger->DeclareProperty("pwoThickness", PWO_Thickness, "Thikness (z direction dimention) of PWO crystals ");
@@ -231,6 +421,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     auto PWO_Material = G4Material::GetMaterial("PbWO4");
     auto Glass_Material = G4Material::GetMaterial("DSBCe");
     auto defaultMaterial = G4Material::GetMaterial("Galactic");
+    auto Mylar = G4Material::GetMaterial("Mylar");
     
     if ( ! PWO_Material || ! Glass_Material || ! defaultMaterial ) {
     G4ExceptionDescription msg;
@@ -266,55 +457,132 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     CalorLV->SetVisAttributes(CalorVisAttr);
 
 */
+  G4Box* mylar_outer = new G4Box("Mylar_solid",mylar_x/2,mylar_y/2,mylar_z/2);
+  G4Box* mylar_inner = new G4Box("Mylar_cavity",mylar_x/2-mylar_thick,mylar_y/2-mylar_thick,mylar_z/2-mylar_thick);
+  G4SubtractionSolid* mylar_box = new G4SubtractionSolid("Mylar",mylar_outer, mylar_inner);
 
-    //  Crystalner arandzin
+  G4Tubs*  mylar_hole = new G4Tubs("mylar_hole", 0., PMT_diameter/2,mylar_thick/2, 0.*deg, 360.*deg);
+
+  G4RotationMatrix rot;
+  G4ThreeVector z_trans_mylar_hole(0, 0, mylar_z/2 - mylar_thick/2);
+  G4Transform3D trans_mylar_hole(rot, z_trans_mylar_hole);
+  G4SubtractionSolid* mylar_holed = new G4SubtractionSolid("Mylar",mylar_box, mylar_hole, trans_mylar_hole);
+
+  //Remove front wall of Mylar
+  G4Box* mylar_front = new G4Box("Mylar_fr",mylar_x/2,mylar_y/2,mylar_thick/2);
+  G4ThreeVector z_trans_mylar_front(0, 0, -mylar_z/2 + mylar_thick/2);
+  G4Transform3D trans_mylar_front(rot, z_trans_mylar_front);
+
+  G4SubtractionSolid* mylar_frame = new G4SubtractionSolid("Mylar_holed",mylar_holed, mylar_front, trans_mylar_front);
+  mylar_log=new G4LogicalVolume(mylar_frame,Mylar,"Mylar");
 
 
-    G4double antes_xy = kNofColumns*PWO_Width;
-    G4double antes_x = PWO_Width;
+  new G4PVPlacement(0,G4ThreeVector(),mylar_log,"Mylar_phys",worldLV,false,0); 
+
     
-    auto antesg_s = new G4Box("gantes",antes_xy*0.5,antes_xy*0.5,PWO_Thickness*0.5);
-    auto antesg_lv = new G4LogicalVolume(antesg_s,defaultMaterial,"antesg_LV");
-    new G4PVPlacement(nullptr,G4ThreeVector(),antesg_lv,"antes_gp",worldLV,false,fCheckOverlaps);
-
-    auto antes_s = new G4Box("antes",antes_x*0.5,antes_xy*0.5,PWO_Thickness*0.5);
-    auto antes_lv = new G4LogicalVolume(antes_s,defaultMaterial,"antes_LV");
- //   new G4PVPlacement(nullptr,G4ThreeVector(0,0,0),antes_lv,"antes_p",antesg_lv,false,fCheckOverlaps);
-
-      new G4ReplicatedSlice(
-                      "divizion",
-                      antes_lv,
-                      antesg_lv,
-                      kXAxis,
-                      kNofColumns,
-                      PWO_Width,
-                      PWO_Gap/2,
-                      0);
-     
-
-
-    auto PWO_Solid = new G4Box("Crystal",antes_x*0.5,antes_x*0.5,PWO_Thickness*0.5);
+    auto PWO_Solid = new G4Box("Crystal",block_x*0.5,block_y*0.5,block_z*0.5);
     fPWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
-
-    new G4ReplicatedSlice(
-                      "divizia",
-                      fPWO_LV,
-                      antes_lv,
-                      kYAxis,
-                      kNofRows,
-                      PWO_Width,
-                      PWO_Gap/2,
-                      0);
-    
-    
-
- //   new G4PVPlacement(nullptr, G4ThreeVector(0,0, PWO_PosZ), PWO_LV,'name', worldLV, false, fCheckOverlaps);
+    new G4PVPlacement(nullptr, G4ThreeVector(0,0,0), fPWO_LV,'name', mylar_log, false, fCheckOverlaps);
 
 
     auto CrystalVisAttr = new G4VisAttributes(G4Color(0.3, 0.5, 0.9, 0.9));
     CrystalVisAttr->SetLineWidth(1);
     CrystalVisAttr->SetForceSolid(false);
     fPWO_LV->SetVisAttributes(CrystalVisAttr);
+
+  G4MaterialPropertiesTable* ReflectorMPT = new G4MaterialPropertiesTable();
+  G4OpticalSurface* Reflector = new G4OpticalSurface("Reflector");
+
+  G4double* refKphot;   //Momenta of optical photons in eV units.
+  refKphot = new G4double[refNumData];
+  for (G4int i=0; i<refNumData; i++) refKphot[i] = hc/refWL[i];
+
+  if (refFlag != 0) {
+    //Specular reflector.
+
+    ReflectorMPT->AddProperty("REALRINDEX",refKphot,refReIndex,refNumData);
+    ReflectorMPT->AddProperty("IMAGINARYRINDEX",refKphot,refImIndex,refNumData);
+
+    Reflector -> SetType(dielectric_metal);
+    Reflector -> SetFinish(polished);
+    Reflector -> SetModel(glisur);
+  }
+  else {
+    // Diffuse reflector, PTFE (Teflon).
+
+    ReflectorMPT -> AddProperty("REFLECTIVITY",refKphot,refRefl,refNumData);
+
+    Reflector -> SetType(dielectric_dielectric);
+    Reflector -> SetModel(unified);
+    Reflector -> SetFinish(groundfrontpainted);   //Purely Lambertian reflection
+  }
+
+  Reflector -> SetMaterialPropertiesTable(ReflectorMPT);
+
+  G4cout << "===== ReflectorMPT: ============================" << G4endl;
+  ReflectorMPT->DumpTable();
+  Reflector->DumpInfo();
+
+  if (subRefrIndex == 0.) {
+    // Reflective front surface of Mylar.
+    new G4LogicalSkinSurface("Reflector",mylar_log,Reflector);
+  }
+  else {
+    // Reflective back surface of Mylar.
+    // Tedlar borders Mylar from back. Making it reflective, makes effectively
+    // Mylar back surface reflective.
+    new G4LogicalSkinSurface("Reflector",tedlar_log,Reflector);
+    G4cout << "   subRefrIndex = " << subRefrIndex
+     << ", substarate between crystal and reflector" << G4endl;
+  }
+  
+
+  //Quantum efficiency of PMT photocathode.
+  //
+
+  G4double wlCat[101] = {675.,670.,665.,660.,655.,650.,645.,640.,635.,630.,
+       625.,620.,615.,610.,605.,600.,595.,590.,585.,580.,
+       575.,570.,565.,560.,555.,550.,545.,540.,535.,530.,
+       525.,520.,515.,510.,505.,500.,495.,490.,485.,480.,
+       475.,470.,465.,460.,455.,450.,445.,440.,435.,430.,
+       425.,420.,415.,410.,405.,400.,395.,390.,385.,380.,
+       375.,370.,365.,360.,355.,350.,345.,340.,335.,330.,
+       325.,320.,315.,310.,305.,300.,295.,290.,285.,280.,
+       275.,270.,265.,260.,255.,250.,245.,240.,235.,230.,
+       225.,220.,215.,210.,205.,200.,195.,190.,185.,180.,
+       175.};
+
+  for (G4int i=0; i<101; i++) {
+    wlCat[i] *= nanometer;
+  };
+
+  G4double kphotCat[101];   //Momenta of optical photons in eV units.
+  for (G4int i=0; i<101; i++) kphotCat[i] = hc/wlCat[i];
+
+  // Hamamatsu R4125 quantum efficiency (bialcali photocathode, borosilicate
+  // window). Taken from the Hamamatsu booklet, p.65.
+  G4double effCat[101] = {
+    0.0030,0.0035,0.0040,0.0046,0.0052,0.0060,0.0068,0.0077,0.0087,0.0099,
+    0.0112,0.0126,0.0141,0.0159,0.0177,0.0198,0.0221,0.0245,0.0272,0.0301,
+    0.0332,0.0365,0.0401,0.0440,0.0481,0.0525,0.0572,0.0621,0.0673,0.0728,
+    0.0785,0.0846,0.0908,0.0973,0.1041,0.1110,0.1181,0.1255,0.1329,0.1405,
+    0.1482,0.1560,0.1638,0.1716,0.1793,0.1870,0.1946,0.2020,0.2092,0.2162,
+    0.2229,0.2293,0.2354,0.2411,0.2463,0.2511,0.2554,0.2592,0.2625,0.2651,
+    0.2673,0.2688,0.2697,0.2700,0.2688,0.2653,0.2595,0.2517,0.2419,0.2305,
+    0.2177,0.2038,0.1891,0.1740,0.1586,0.1434,0.1285,0.1141,0.1004,0.0877,
+    0.0758,0.0650,0.0553,0.0466,0.0389,0.0322,0.0264,0.0215,0.0173,0.0138,
+    0.0110,0.0086,0.0067,0.0052,0.0040,0.0030,0.0023,0.0017,0.0012,0.0009,
+    0.0007};
+
+  G4double reflCat[101];
+  for (G4int i = 0; i < 101; i++) {
+    reflCat[i] = 0.;
+  }
+
+
+
+
+
 
     /*
     static char abname[256];

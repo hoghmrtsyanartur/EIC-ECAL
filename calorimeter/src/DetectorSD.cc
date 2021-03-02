@@ -37,11 +37,11 @@ void DetectorSD::Initialize(G4HCofThisEvent* hce)
     hce->AddHitsCollection( hcID, fHitsCollection ); 
 }
 
-    for (auto column=0; column<kNofColumns; column++ ) {
-    	for(auto row=0;row<kNofRows;row++){
+   // for (auto column=0; column<kNofColumns; column++ ) {
+  //  	for(auto row=0;row<kNofRows;row++){
    		fHitsCollection->insert(new DetectorHit());
-   	    }
-    }
+   //	    }
+ //   }
 }
 G4bool DetectorSD::ProcessHits(G4Step* step,G4TouchableHistory* /*history*/)
 {
