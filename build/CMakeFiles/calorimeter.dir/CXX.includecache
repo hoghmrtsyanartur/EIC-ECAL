@@ -1731,6 +1731,10 @@ G4Material.hh
 /home/artur/Geant/projects/EIC-ECAL/calorimeter/src/G4Material.hh
 G4MaterialTable.hh
 /home/artur/Geant/projects/EIC-ECAL/calorimeter/src/G4MaterialTable.hh
+G4Element.hh
+/home/artur/Geant/projects/EIC-ECAL/calorimeter/src/G4Element.hh
+G4ElementTable.hh
+/home/artur/Geant/projects/EIC-ECAL/calorimeter/src/G4ElementTable.hh
 G4NistManager.hh
 /home/artur/Geant/projects/EIC-ECAL/calorimeter/src/G4NistManager.hh
 G4Box.hh

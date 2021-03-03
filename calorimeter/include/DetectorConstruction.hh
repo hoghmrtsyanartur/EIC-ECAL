@@ -9,8 +9,6 @@ class G4VPhysicalVolume;
 class G4GlobalMagFieldMessenger;
 class G4VSensitiveDetector;
 
-
-
 class DetectorConstruction : public G4VUserDetectorConstruction
 {
   public:

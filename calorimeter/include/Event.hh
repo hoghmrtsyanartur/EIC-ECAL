@@ -22,6 +22,7 @@ public:
   std::vector<G4double>& GetHadCalEdep() { return fCalEdep[kHad]; }
 private:
   G4int fCalHCID;
+  G4int TunID;
   std::array<std::vector<G4double>, 1> fCalEdep;
 
 };

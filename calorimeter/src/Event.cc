@@ -67,6 +67,7 @@ void Event::EndOfEventAction(const G4Event* event)
    G4double totalNpe = 0;
 
 
+
    auto hc = GetHC(event, fCalHCID);
    if ( ! hc ) return;
 

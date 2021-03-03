@@ -3,6 +3,10 @@
 
 #include "G4Material.hh"
 #include "G4MaterialTable.hh"
+#include "G4Element.hh"
+#include "G4ElementTable.hh"
+
+
 #include "G4NistManager.hh"
 #include "G4Box.hh"
 #include "G4Tubs.hh"
@@ -147,6 +151,7 @@ void DetectorConstruction::DefineMaterials()
   G4double z;  // z=mean number of protons;  
   G4double density; 
   G4int ncomponents,natoms;
+  G4int nelements;
 
   a = 16.00 * g / mole;
     G4Element *elO = new G4Element(name = "Oxygen", symbol = "O", z = 8., a);
@@ -265,11 +270,25 @@ G4double wlPbWO4[52] = {675.,
 
   //bazmapatkichnerr
 
+  // Air
+  // 
+  G4Material* Air = new G4Material("Air", density=1.29*mg/cm3, nelements=2);
+  Air->AddElement(N, 70.*perCent);
+  Air->AddElement(O, 30.*perCent);
+
+  G4double rindAir[52];
+  for (G4int i=0; i<52; i++) {
+    rindAir[i] = 1.000293;   //Air @ STP
+  };
+  G4MaterialPropertiesTable *AirMPT = new G4MaterialPropertiesTable();
+  AirMPT -> AddProperty("RINDEX",kphotPbWO4,rindAir,52);
+  Air -> SetMaterialPropertiesTable(AirMPT);
+
   // Glass
   //
 
   density = 2.23*g/cm3;   //Borosilicate glass (wikipedia)
-  G4Material* Glass = new G4Material("Glass", density, ncomponents=2);
+  auto Glass = new G4Material("Glass", density, ncomponents=2);
   Glass->AddElement(Si, 1);
   Glass->AddElement(O,  2);
 
@@ -285,7 +304,7 @@ G4double wlPbWO4[52] = {675.,
   // Optical grease BC630 from Bicron
   //
   density = 1.06*g/cm3;
-  G4Material* OpticalGlue = new G4Material("Silgard", density, ncomponents=1);
+  auto OpticalGlue = new G4Material("Silgard", density, ncomponents=1);
   OpticalGlue->AddElement(Si, 1); //exact composition not known
 
   G4double rindGlue[52];
@@ -297,16 +316,17 @@ G4double wlPbWO4[52] = {675.,
   GlueMPT -> AddProperty("RINDEX",kphotPbWO4,rindGlue,52);
   OpticalGlue -> SetMaterialPropertiesTable(GlueMPT);
 
+
   // Optical insulation
   //
-  density = 1.5;   //approximately
-  G4Material* Polymer = new G4Material("Polymer", density, ncomponents=2);
+  density = 1.5*g/cm3;   //approximately
+  auto Polymer = new G4Material("Polymer", density, ncomponents=2);
   Polymer->AddElement(C, 1);
   Polymer->AddElement(H, 1);
   //Mylar, reflector substrate material.
   //
   
-  G4Material* Mylar = new G4Material("Mylar", density= 1.40*g/cm3, ncomponents=3);
+  auto Mylar = new G4Material("Mylar", density= 1.40*g/cm3, ncomponents=3);
   Mylar->AddElement(H, natoms=4);
   Mylar->AddElement(C, natoms=5);
   Mylar->AddElement(O, natoms=2);
@@ -328,7 +348,7 @@ G4double wlPbWO4[52] = {675.,
   //
 
   density = 1*g/cm3;   //Does not matter
-  G4Material* Bialcali = new G4Material("Bialcali", density, ncomponents=2);
+  auto Bialcali = new G4Material("Bialcali", density, ncomponents=2);
   Bialcali->AddElement(Cs, 1);
   Bialcali->AddElement(K,  1);
 
@@ -421,7 +441,14 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     auto PWO_Material = G4Material::GetMaterial("PbWO4");
     auto Glass_Material = G4Material::GetMaterial("DSBCe");
     auto defaultMaterial = G4Material::GetMaterial("Galactic");
+    auto Bialcali = G4Material::GetMaterial("Bialcali");
+    auto Glass = G4Material::GetMaterial("Glass");
+    auto OpticalGlue = G4Material::GetMaterial("OpticalGlue");
+    auto Polymer = G4Material::GetMaterial("Polymer");
     auto Mylar = G4Material::GetMaterial("Mylar");
+    
+    
+
     
     if ( ! PWO_Material || ! Glass_Material || ! defaultMaterial ) {
     G4ExceptionDescription msg;
@@ -476,19 +503,94 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   G4SubtractionSolid* mylar_frame = new G4SubtractionSolid("Mylar_holed",mylar_holed, mylar_front, trans_mylar_front);
   mylar_log=new G4LogicalVolume(mylar_frame,Mylar,"Mylar");
 
+  
 
-  new G4PVPlacement(0,G4ThreeVector(),mylar_log,"Mylar_phys",worldLV,false,0); 
+  // Optical insulation
+  //
+  G4Box* tedlar_outer = new G4Box("Tedlar_solid",tedlar_x/2,tedlar_y/2,tedlar_z/2);
+  G4Box* tedlar_inner = new G4Box("Tedlar_cavity",tedlar_x/2-tedlar_thick,tedlar_y/2-tedlar_thick,tedlar_z/2-tedlar_thick);
+  G4SubtractionSolid* tedlar_box = new G4SubtractionSolid("Tedlar",tedlar_outer, tedlar_inner);
 
+  // Make a hole of PMT size
+  G4Tubs*  tedlar_hole = new G4Tubs("tedlar_hole",0., PMT_diameter/2, tedlar_thick/2,0.*deg, 360.*deg);
+
+  G4ThreeVector z_trans_tedlar_hole(0, 0, tedlar_z/2 - tedlar_thick/2);
+  G4Transform3D trans_tedlar_hole(rot, z_trans_tedlar_hole);
+  G4SubtractionSolid* tedlar_holed = new G4SubtractionSolid("Tedlar_holed",tedlar_box, tedlar_hole, trans_tedlar_hole);
+
+  //Remove front wall of Tedlar
+  G4Box* tedlar_front = new G4Box("Tedlar_fr",tedlar_x/2,tedlar_y/2,tedlar_thick/2);
+  G4ThreeVector z_trans_tedlar_front(0, 0, -tedlar_z/2 + tedlar_thick/2);
+  G4Transform3D trans_tedlar_front(rot, z_trans_tedlar_front);
+  G4SubtractionSolid* tedlar_frame = new G4SubtractionSolid("Tedlar",tedlar_holed, tedlar_front, trans_tedlar_front);
+
+  tedlar_log = new G4LogicalVolume(tedlar_frame,Polymer,"Tedlar",0,0,0);
     
-    auto PWO_Solid = new G4Box("Crystal",block_x*0.5,block_y*0.5,block_z*0.5);
-    fPWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
-    new G4PVPlacement(nullptr, G4ThreeVector(0,0,0), fPWO_LV,'name', mylar_log, false, fCheckOverlaps);
+  G4Tubs*  PMTWin_tube = new G4Tubs("PMTWindow", 0., PMT_diameter/2, PMTWin_thick/2,0.*deg, 360.*deg);
+  PMTWin_right_log = new G4LogicalVolume(PMTWin_tube,Glass, "PMTWindow");
+
+  G4Tubs*  Cathode_tube = new G4Tubs("Cathode", 0., Cathode_diam/2, Cathode_thick/2,0.*deg, 360.*deg);
+  Cathode_log = new G4LogicalVolume(Cathode_tube, Bialcali, "Cathode");
+
+  G4Tubs*  glue_tube = new G4Tubs("glue", 0., PMT_diameter/2, glue_thick/2, 0.*deg, 360.*deg);
+  glue_log = new G4LogicalVolume(glue_tube,OpticalGlue, "Glue");
+
+  G4Box* counter_box = new G4Box("Counter",counter_x/2,counter_y/2,counter_z/2);
+  counter_log = new G4LogicalVolume(counter_box,defaultMaterial,"Counter",0,0,0);
 
 
-    auto CrystalVisAttr = new G4VisAttributes(G4Color(0.3, 0.5, 0.9, 0.9));
-    CrystalVisAttr->SetLineWidth(1);
-    CrystalVisAttr->SetForceSolid(false);
-    fPWO_LV->SetVisAttributes(CrystalVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(),mylar_log,"Mylar_phys",counter_log,false,0);
+  new G4PVPlacement(0,G4ThreeVector(),tedlar_log,"Mylar_phys",counter_log,false,0);
+
+  G4double antesg_x = kNofColumns*counter_x;
+  G4double antesg_y = kNofColumns*counter_y;
+  G4double antes_x = counter_x;
+  G4double antes_y = counter_y;
+
+  auto antesg_s = new G4Box("gantes",antesg_x*0.5,antesg_y*0.5,counter_z*0.5);
+  auto antesg_lv = new G4LogicalVolume(antesg_s,defaultMaterial,"antesg_LV");
+  new G4PVPlacement(nullptr,G4ThreeVector(),antesg_lv,"antes_gp",worldLV,false,fCheckOverlaps);
+
+  auto antes_s = new G4Box("antes",antes_x*0.5,antesg_y*0.5,counter_z*0.5);
+  auto antes_lv = new G4LogicalVolume(antes_s,defaultMaterial,"antes_LV");
+
+  new G4ReplicatedSlice(
+                      "divizion",
+                      antes_lv,
+                      antesg_lv,
+                      kXAxis,
+                      kNofColumns,
+                      counter_x,
+                      0,
+                      0);  
+//  new G4PVPlacement(0,G4ThreeVector(),counter_log,"Mylar_phys",worldLV,false,0);
+  new G4ReplicatedSlice("divizia",counter_log,antes_lv,kYAxis,kNofRows,counter_x,0,0);
+  
+  G4double x = 0.;
+  G4double y = 0.;
+  G4double z = block_z/2 + glue_thick/2;
+  new G4PVPlacement(0,G4ThreeVector(x,y,z),glue_log,"Glue",counter_log,false,0);
+
+  z = block_z/2 + glue_thick + PMTWin_thick/2;
+
+  new G4PVPlacement(0,G4ThreeVector(x,y,z),PMTWin_right_log,"PMTWindow",counter_log,false,0);
+  new G4PVPlacement(0,G4ThreeVector(x,y,z),Cathode_log,"Cathode",counter_log,false,0);
+
+
+  auto PWO_Solid = new G4Box("Crystal",block_x*0.5,block_y*0.5,block_z*0.5);
+  fPWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
+  new G4PVPlacement(nullptr, G4ThreeVector(0,0,0), fPWO_LV,'name', counter_log, false, fCheckOverlaps);
+
+
+  auto CrystalVisAttr = new G4VisAttributes(G4Color(0.3, 0.5, 0.9, 0.9));
+  CrystalVisAttr->SetLineWidth(1);
+  CrystalVisAttr->SetForceSolid(false);
+  fPWO_LV->SetVisAttributes(CrystalVisAttr);
+
+
+
+
+
 
   G4MaterialPropertiesTable* ReflectorMPT = new G4MaterialPropertiesTable();
   G4OpticalSurface* Reflector = new G4OpticalSurface("Reflector");
@@ -579,6 +681,19 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     reflCat[i] = 0.;
   }
 
+  G4OpticalSurface* surfCat = new G4OpticalSurface("Cathode");
+
+  surfCat -> SetType(dielectric_metal);
+  surfCat -> SetFinish(polished);
+  surfCat -> SetModel(glisur);
+
+  G4MaterialPropertiesTable* surfCatMPT = new G4MaterialPropertiesTable();
+  surfCatMPT -> AddProperty("REFLECTIVITY",kphotCat,reflCat,101);
+  surfCatMPT -> AddProperty("EFFICIENCY",kphotCat,effCat,101);
+
+  surfCat -> SetMaterialPropertiesTable(surfCatMPT);
+
+  new G4LogicalSkinSurface("Cathode",Cathode_log,surfCat);
 
 
 
@@ -815,8 +930,11 @@ void DetectorConstruction::ConstructSDandField()
   auto hadCalorimeter = new DetectorSD(SDname="/Calorimeter");
   sdManager->AddNewDetector(hadCalorimeter);
   fPWO_LV->SetSensitiveDetector(hadCalorimeter);
-  
-
+  /*
+  auto Catod = new DetectorSD(SDname="/Calor");
+  sdManager->AddNewDetector(Catod);
+  Cathode_log->SetSensitiveDetector(Catod);
+  */
   G4ThreeVector fieldValue;
   fMagFieldMessenger = new G4GlobalMagFieldMessenger(fieldValue);
   fMagFieldMessenger->SetVerboseLevel(1);
