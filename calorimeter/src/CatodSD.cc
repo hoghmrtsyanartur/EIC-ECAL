@@ -1,5 +1,5 @@
-#include "DetectorSD.hh"
-#include "DetectorHit.hh"
+#include "CatodSD.hh"
+#include "CatodHit.hh"
 #include "Connstants.hh"
 
 #include "G4HCofThisEvent.hh"
@@ -20,11 +20,11 @@
 #include "G4Track.hh"
 #include "Connstants.hh"
 
-DetectorSD::DetectorSD(G4String name)
+CatodSD::CatodSD(G4String name)
 :G4VSensitiveDetector(name),
  fHitsCollection(nullptr),fHCID(-1)
 {
-	collectionName.insert("Coll");
+	collectionName.insert("Cat");
 }
 DetectorSD::~DetectorSD()
 {}
