@@ -26,9 +26,10 @@ namespace {
 }
 int main(int argc,char** argv)
 {
-
+/*
   CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
   CLHEP::HepRandom::setTheSeed(time(NULL));
+  */
   // Evaluate arguments
   //
   if ( argc > 7 ) {

@@ -376,7 +376,7 @@ G4double wlPbWO4[52] = {675.,
     G4double tedlar_thick = 0.040*mm;
     G4double mylar_thick = 0.025*mm;
     G4double glue_thick = 0.035*mm;
-    //G4double air_gap = 0.035*mm;
+    air_gap = 0.035*mm;
 
     G4double PMT_diameter = 1.86*cm;
     G4double PMTWin_thick = 1*mm;
@@ -388,9 +388,9 @@ G4double wlPbWO4[52] = {675.,
     G4double block_y = 2*cm;
     G4double block_z = 20*cm;
 
-    G4double mylar_x = block_x + 2*PWO_Gap + 2*mylar_thick;
-    G4double mylar_y = block_y + 2*PWO_Gap+ 2*mylar_thick;
-    G4double mylar_z = block_z + 2*PWO_Gap + 2*mylar_thick;
+    G4double mylar_x = block_x + 2*air_gap + 2*mylar_thick;
+    G4double mylar_y = block_y + 2*air_gap+ 2*mylar_thick;
+    G4double mylar_z = block_z + 2*air_gap + 2*mylar_thick;
 
     G4double tedlar_x = mylar_x + 2*tedlar_thick;
     G4double tedlar_y = mylar_y + 2*tedlar_thick;
@@ -552,10 +552,10 @@ G4double wlPbWO4[52] = {675.,
                       kXAxis,
                       kNofColumns,
                       counter_x,
-                      0,
+                      PWO_Gap/2,
                       0);  
 //  new G4PVPlacement(0,G4ThreeVector(),counter_log,"Mylar_phys",worldLV,false,0);
-  new G4ReplicatedSlice("divizia",counter_log,antes_lv,kYAxis,kNofRows,counter_x,0,0);
+  new G4ReplicatedSlice("divizia",counter_log,antes_lv,kYAxis,kNofRows,counter_x,PWO_Gap/2,0);
   
   G4double x = 0.;
   G4double y = 0.;
@@ -567,6 +567,16 @@ G4double wlPbWO4[52] = {675.,
   new G4PVPlacement(0,G4ThreeVector(x,y,z),PMTWin_right_log,"PMTWindow",counter_log,false,0);
   new G4PVPlacement(0,G4ThreeVector(x,y,z),Cathode_log,"Cathode",counter_log,false,0);
 
+  auto PMTVisAttr = new G4VisAttributes(G4Color(1.0, 0.0, 0.0));
+    PMTVisAttr->SetLineWidth(1);
+    PMTVisAttr->SetForceSolid(false);
+    PMTWin_right_log->SetVisAttributes(PMTVisAttr);
+
+  auto CatVisAttr = new G4VisAttributes(G4Color(0.0, 1.0, 0.0));
+    CatVisAttr->SetLineWidth(1);
+    CatVisAttr->SetForceSolid(false);
+    Cathode_log->SetVisAttributes(CatVisAttr);
+    
 
   auto PWO_Solid = new G4Box("Crystal",block_x*0.5,block_y*0.5,block_z*0.5);
   fPWO_LV = new G4LogicalVolume(PWO_Solid,PbWO4,"CrystalLV");
@@ -920,7 +930,7 @@ void DetectorConstruction::ConstructSDandField()
 
   auto hadCalorimeter = new DetectorSD(SDname="/Calorimeter");
   sdManager->AddNewDetector(hadCalorimeter);
-  fPWO_LV->SetSensitiveDetector(hadCalorimeter);
+  PMTWin_right_log->SetSensitiveDetector(hadCalorimeter);
   /*
   auto Catod = new DetectorSD(SDname="/Calor");
   sdManager->AddNewDetector(Catod);
