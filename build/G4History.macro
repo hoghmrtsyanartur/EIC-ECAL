@@ -2,7 +2,8 @@
 /run/initialize /control/execute vis.ma/tracking/storeTrajectory 2
 /run/printProgress 100
 /gun/energy 50 MeV
-reate ! ! 600x600-0+0
+/gun/energy 50 MeV
++0
 /vis/viewer/refresh
 /vis/viewer/set/autoRefresh false
 /vis/verbose errors
@@ -68,4 +69,13 @@ reate ! ! 600x600-0+0
 /gui/addButton viewer "Update scene" "/vis/scene/notifyHandlers"
 /run/printProgress 100
 /gun/energy 50 MeV
+/vis/viewer/set/picking false
+/vis/viewer/refresh
+/gun/energy 50 MeV
 /run/beamOn 1
+/vis/viewer/set/picking true
+/vis/viewer/refresh
+/vis/viewer/set/picking false
+/vis/viewer/refresh
+/vis/viewer/set/picking true
+/vis/viewer/refresh

@@ -66,6 +66,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 }
 void DetectorConstruction::DefineMaterials()
 {
+  
+}
+G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
+{
+
+
+     
   ifstream fin;
   fin.open("reflector.inp");
 
@@ -107,7 +114,7 @@ void DetectorConstruction::DefineMaterials()
     
   G4cout << "DetectorConstruction::DetectorConstruction: input data:"
     << G4endl;
-  G4cout << "   Air gap = " << 0.01/mm << " mm" << G4endl;
+  G4cout << "   gap = " << 0.01/mm << " mm" << G4endl;
   G4cout << "   Reflector: " << refName << ", refFlag = " << refFlag << ", ";
   if (refFlag==0)
     G4cout << "diffuse reflector";
@@ -168,9 +175,9 @@ void DetectorConstruction::DefineMaterials()
   a = 137.33 * g / mole;
     G4Element *elBa = new G4Element(name = "Barium", symbol = "Ba", z = 56., a);
 
-  // Vacuum
-  new G4Material("Galactic", z=1., a=1.01*g/mole,density= universe_mean_density,
-                  kStateGas, 2.73*kelvin, 3.e-18*pascal);
+ /* // Vacuum
+  auto Galactic = new G4Material("Galactic", z=1., a=1.01*g/mole,density= universe_mean_density,
+                  kStateGas, 2.73*kelvin, 3.e-18*pascal);*/
   auto PbWO4 = new G4Material("PbWO4",density = 8.280 * g / cm3,ncomponents = 3);
   PbWO4->AddElement(elO, natoms = 4);
   PbWO4->AddElement(elW, natoms = 1);
@@ -283,7 +290,6 @@ G4double wlPbWO4[52] = {675.,
   G4MaterialPropertiesTable *AirMPT = new G4MaterialPropertiesTable();
   AirMPT -> AddProperty("RINDEX",kphotPbWO4,rindAir,52);
   Air -> SetMaterialPropertiesTable(AirMPT);
-
   // Glass
   //
 
@@ -352,14 +358,6 @@ G4double wlPbWO4[52] = {675.,
   Bialcali->AddElement(Cs, 1);
   Bialcali->AddElement(K,  1);
 
-
-
-}
-G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
-{
-
-
-    const G4double hc = 1.239841857E-6*m*eV; 
 
    // G4double RIn = 15 * cm;
     G4double ROut = 120 *cm;
@@ -438,19 +436,12 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     double worldSizeZ = 3.*m;
     //................Get Materials.................................
 
-    auto PWO_Material = G4Material::GetMaterial("PbWO4");
-    auto Glass_Material = G4Material::GetMaterial("DSBCe");
-    auto defaultMaterial = G4Material::GetMaterial("Galactic");
-    auto Bialcali = G4Material::GetMaterial("Bialcali");
-    auto Glass = G4Material::GetMaterial("Glass");
-    auto OpticalGlue = G4Material::GetMaterial("OpticalGlue");
-    auto Polymer = G4Material::GetMaterial("Polymer");
-    auto Mylar = G4Material::GetMaterial("Mylar");
+    
     
     
 
     
-    if ( ! PWO_Material || ! Glass_Material || ! defaultMaterial ) {
+    if ( ! PbWO4 || ! DSBCe || ! Air ) {
     G4ExceptionDescription msg;
     msg << "Cannot retrieve materials already defined."; 
     G4Exception("DetectorConstruction::DefineVolumes()",
@@ -459,7 +450,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     //World
 
     auto worldS = new G4Box("World",worldSizeXY/2,worldSizeXY/2,worldSizeZ/2);
-    auto worldLV = new G4LogicalVolume(worldS,defaultMaterial,"World");
+    auto worldLV = new G4LogicalVolume(worldS,Air,"World");
     auto worldPV = new G4PVPlacement(0,G4ThreeVector(),worldLV,"World",0,false,0,fCheckOverlaps);
 
    /* //Calorimeter
@@ -536,7 +527,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   glue_log = new G4LogicalVolume(glue_tube,OpticalGlue, "Glue");
 
   G4Box* counter_box = new G4Box("Counter",counter_x/2,counter_y/2,counter_z/2);
-  counter_log = new G4LogicalVolume(counter_box,defaultMaterial,"Counter",0,0,0);
+  counter_log = new G4LogicalVolume(counter_box,Air,"Counter",0,0,0);
 
 
   new G4PVPlacement(0,G4ThreeVector(),mylar_log,"Mylar_phys",counter_log,false,0);
@@ -548,11 +539,11 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   G4double antes_y = counter_y;
 
   auto antesg_s = new G4Box("gantes",antesg_x*0.5,antesg_y*0.5,counter_z*0.5);
-  auto antesg_lv = new G4LogicalVolume(antesg_s,defaultMaterial,"antesg_LV");
+  auto antesg_lv = new G4LogicalVolume(antesg_s,Air,"antesg_LV");
   new G4PVPlacement(nullptr,G4ThreeVector(),antesg_lv,"antes_gp",worldLV,false,fCheckOverlaps);
 
   auto antes_s = new G4Box("antes",antes_x*0.5,antesg_y*0.5,counter_z*0.5);
-  auto antes_lv = new G4LogicalVolume(antes_s,defaultMaterial,"antes_LV");
+  auto antes_lv = new G4LogicalVolume(antes_s,Air,"antes_LV");
 
   new G4ReplicatedSlice(
                       "divizion",
@@ -568,7 +559,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   
   G4double x = 0.;
   G4double y = 0.;
-  G4double z = block_z/2 + glue_thick/2;
+  z = block_z/2 + glue_thick/2;
   new G4PVPlacement(0,G4ThreeVector(x,y,z),glue_log,"Glue",counter_log,false,0);
 
   z = block_z/2 + glue_thick + PMTWin_thick/2;
@@ -578,7 +569,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
 
   auto PWO_Solid = new G4Box("Crystal",block_x*0.5,block_y*0.5,block_z*0.5);
-  fPWO_LV = new G4LogicalVolume(PWO_Solid,PWO_Material,"CrystalLV");
+  fPWO_LV = new G4LogicalVolume(PWO_Solid,PbWO4,"CrystalLV");
   new G4PVPlacement(nullptr, G4ThreeVector(0,0,0), fPWO_LV,'name', counter_log, false, fCheckOverlaps);
 
 
