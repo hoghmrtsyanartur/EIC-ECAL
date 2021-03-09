@@ -65,7 +65,7 @@ void Event::EndOfEventAction(const G4Event* event)
   // G4int totalCalHit = 0; 
    G4double totalCalEdep = 0;
    G4double totalNpe = 0;
-
+   G4double track = 0;
 
 
    auto hc = GetHC(event, fCalHCID);
@@ -78,14 +78,17 @@ void Event::EndOfEventAction(const G4Event* event)
         auto hit = static_cast<DetectorHit*>(hc->GetHit(i));
         edep = hit->GetEdep();
         Npe = hit->GetNpe();
-      if ( edep > 0. ) {
+        track = hit->GetTrack();
+
+      if ( Npe > 0. ) {
         totalCalEdep += edep;
         totalNpe += Npe;
       }
     //  fCalEdep[i] = edep;
+      analysisManager->FillNtupleDColumn(i, track);
     }
-    analysisManager->FillNtupleDColumn(0, totalCalEdep);
-    analysisManager->FillNtupleDColumn(1, totalNpe);
+    
+  //  analysisManager->FillNtupleDColumn(9, totalNpe);
   analysisManager->AddNtupleRow();
 }
 

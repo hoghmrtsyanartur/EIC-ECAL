@@ -40,6 +40,10 @@ class DetectorHit : public G4VHit
     void AddEdep(G4double de) { fEdep += de; }
     G4double GetEdep() const { return fEdep; }
 
+    void SetTrack(G4double tr) {fTrack = tr;}
+    void AddTrack(G4double tr) {fTrack += tr;}
+    G4double GetTrack() const {return fTrack;}
+
 
     void AddNpe(){ fNpe +=1; }
     G4double GetNpe() const { return fNpe; }
@@ -49,6 +53,7 @@ class DetectorHit : public G4VHit
     G4int fRowID;
     G4double fEdep;
     G4int fNpe;
+    G4double fTrack;
 };
 using CalorHitsCollection = G4THitsCollection<DetectorHit>;
 
