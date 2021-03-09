@@ -52,8 +52,8 @@ G4bool DetectorSD::ProcessHits(G4Step* step,G4TouchableHistory* /*history*/)
 	auto touchable = (step->GetPreStepPoint()->GetTouchable());
 
 
-	auto rowNo = touchable->GetCopyNumber(0);
-	auto columnNo = touchable->GetCopyNumber(1);
+	auto rowNo = touchable->GetCopyNumber(1);
+	auto columnNo = touchable->GetCopyNumber(2);
 	auto hitID = kNofRows*columnNo+rowNo;
 	auto hit = (*fHitsCollection)[hitID];
 
@@ -68,8 +68,9 @@ G4bool DetectorSD::ProcessHits(G4Step* step,G4TouchableHistory* /*history*/)
 		hit->SetColumnID(columnNo);
    		hit->SetRowID(rowNo);
 	}
-    
+  auto track = step->GetTrack()->GetTrackLength();
     hit->AddEdep(edep);
+    hit->AddTrack(track);
       
     G4OpBoundaryProcessStatus boundaryStatus=Undefined;
     static G4OpBoundaryProcess* boundary=NULL;

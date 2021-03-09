@@ -7,6 +7,7 @@
 #include "Event.hh"
 
 #include "G4Run.hh"
+#include "Connstants.hh"
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4GenericAnalysisManager.hh"
@@ -25,10 +26,15 @@ Run::Run(Event* event)
 
   if(fEvent){
     analysisManager->CreateNtuple("Call", "Hits");
-    analysisManager->CreateNtupleDColumn("ECryst"); // column Id = 0
-    analysisManager->CreateNtupleDColumn("photonner");
-    analysisManager->FinishNtuple();
+    for(int i=0;i<kNofCells;i++){
+      std::stringstream ss;
+      ss << i;
+      std::string str = "Crystal"+ss.str();
+    analysisManager->CreateNtupleDColumn(str); // column Id = 
   }
+ // analysisManager->CreateNtupleDColumn("tot");
+  analysisManager->FinishNtuple();
+}
 }
 
 Run::~Run()

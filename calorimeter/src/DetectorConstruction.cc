@@ -533,29 +533,21 @@ G4double wlPbWO4[52] = {675.,
   new G4PVPlacement(0,G4ThreeVector(),mylar_log,"Mylar_phys",counter_log,false,0);
   new G4PVPlacement(0,G4ThreeVector(),tedlar_log,"Mylar_phys",counter_log,false,0);
 
-  G4double antesg_x = kNofColumns*counter_x;
-  G4double antesg_y = kNofColumns*counter_y;
-  G4double antes_x = counter_x;
-  G4double antes_y = counter_y;
+  G4double row_x = kNofRows*counter_x;
+  G4double row_y = kNofColumns*counter_y;
+  G4double column_x = counter_x;
+  G4double column_y = counter_y;
 
-  auto antesg_s = new G4Box("gantes",antesg_x*0.5,antesg_y*0.5,counter_z*0.5);
-  auto antesg_lv = new G4LogicalVolume(antesg_s,Air,"antesg_LV");
-  new G4PVPlacement(nullptr,G4ThreeVector(),antesg_lv,"antes_gp",worldLV,false,fCheckOverlaps);
+  auto row_s = new G4Box("row",row_x*0.5,row_y*0.5,counter_z*0.5);
+  auto row_lv = new G4LogicalVolume(row_s,Air,"ROW_LV");
+  new G4PVPlacement(nullptr,G4ThreeVector(),row_lv,"column_ph",worldLV,false,fCheckOverlaps);
 
-  auto antes_s = new G4Box("antes",antes_x*0.5,antesg_y*0.5,counter_z*0.5);
-  auto antes_lv = new G4LogicalVolume(antes_s,Air,"antes_LV");
+  auto column_s = new G4Box("column",column_x*0.5,row_y*0.5,counter_z*0.5);
+  auto column_lv = new G4LogicalVolume(column_s,Air,"COLUMN_LV");
 
-  new G4ReplicatedSlice(
-                      "divizion",
-                      antes_lv,
-                      antesg_lv,
-                      kXAxis,
-                      kNofColumns,
-                      counter_x,
-                      PWO_Gap/2,
-                      0);  
-//  new G4PVPlacement(0,G4ThreeVector(),counter_log,"Mylar_phys",worldLV,false,0);
-  new G4ReplicatedSlice("divizia",counter_log,antes_lv,kYAxis,kNofRows,counter_x,PWO_Gap/2,0);
+  new G4ReplicatedSlice("divizion",column_lv,row_lv,kXAxis,kNofRows,counter_x,PWO_Gap/2,0);  
+
+  new G4ReplicatedSlice("divizia",counter_log,column_lv,kYAxis,kNofColumns,counter_x,PWO_Gap/2,0);
   
   G4double x = 0.;
   G4double y = 0.;
@@ -931,11 +923,7 @@ void DetectorConstruction::ConstructSDandField()
   auto hadCalorimeter = new DetectorSD(SDname="/Calorimeter");
   sdManager->AddNewDetector(hadCalorimeter);
   PMTWin_right_log->SetSensitiveDetector(hadCalorimeter);
-  /*
-  auto Catod = new DetectorSD(SDname="/Calor");
-  sdManager->AddNewDetector(Catod);
-  Cathode_log->SetSensitiveDetector(Catod);
-  */
+ 
   G4ThreeVector fieldValue;
   fMagFieldMessenger = new G4GlobalMagFieldMessenger(fieldValue);
   fMagFieldMessenger->SetVerboseLevel(1);

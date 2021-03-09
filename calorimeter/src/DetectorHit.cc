@@ -37,7 +37,8 @@ DetectorHit::DetectorHit(const DetectorHit& right)
   fColumnID(right.fColumnID),
   fRowID(right.fRowID),
   fEdep(right.fEdep),
-  fNpe(right.fNpe)
+  fNpe(right.fNpe),
+  fTrack(right.fTrack)
 {}
 
 const DetectorHit& DetectorHit::operator=(const DetectorHit& right)
@@ -46,6 +47,7 @@ const DetectorHit& DetectorHit::operator=(const DetectorHit& right)
   fRowID = right.fRowID;
   fEdep = right.fEdep;
   fNpe = right.fNpe;
+  fTrack = right.fTrack;
   return *this;
 }
 
