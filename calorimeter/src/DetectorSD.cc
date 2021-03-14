@@ -70,7 +70,7 @@ G4bool DetectorSD::ProcessHits(G4Step* step,G4TouchableHistory* /*history*/)
 	}
   auto track = step->GetTrack()->GetTrackLength();
     hit->AddEdep(edep);
-    hit->AddTrack(track);
+    
       
     G4OpBoundaryProcessStatus boundaryStatus=Undefined;
     static G4OpBoundaryProcess* boundary=NULL;
@@ -92,6 +92,7 @@ G4bool DetectorSD::ProcessHits(G4Step* step,G4TouchableHistory* /*history*/)
 	if(particleType==G4OpticalPhoton::OpticalPhotonDefinition()){
  	   if(step->GetTrack()->GetParentID()>0){
  	   hit->AddNpe();
+     hit->AddTrack(track);
   	   }
     }
   	return true;

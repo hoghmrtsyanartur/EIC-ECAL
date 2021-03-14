@@ -8,6 +8,7 @@
 #include "G4VHitsCollection.hh"
 #include "G4SDManager.hh"
 
+#include "Connstants.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4ios.hh"
 #include "g4analysis.hh"
@@ -65,7 +66,8 @@ void Event::EndOfEventAction(const G4Event* event)
   // G4int totalCalHit = 0; 
    G4double totalCalEdep = 0;
    G4double totalNpe = 0;
-   G4double track = 0;
+  // G4double track = 0;
+  // G4double totalTrack = 0;
 
 
    auto hc = GetHC(event, fCalHCID);
@@ -78,17 +80,16 @@ void Event::EndOfEventAction(const G4Event* event)
         auto hit = static_cast<DetectorHit*>(hc->GetHit(i));
         edep = hit->GetEdep();
         Npe = hit->GetNpe();
-        track = hit->GetTrack();
 
-      if ( Npe > 0. ) {
+      if ( edep > 0. ) {
         totalCalEdep += edep;
         totalNpe += Npe;
       }
     //  fCalEdep[i] = edep;
-      analysisManager->FillNtupleDColumn(i, track);
+      analysisManager->FillNtupleDColumn(i, Npe);
     }
     
-  //  analysisManager->FillNtupleDColumn(9, totalNpe);
+    analysisManager->FillNtupleDColumn(kNofCells, totalNpe);
   analysisManager->AddNtupleRow();
 }
 

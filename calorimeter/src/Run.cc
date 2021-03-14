@@ -32,7 +32,7 @@ Run::Run(Event* event)
       std::string str = "Crystal"+ss.str();
     analysisManager->CreateNtupleDColumn(str); // column Id = 
   }
- // analysisManager->CreateNtupleDColumn("tot");
+  analysisManager->CreateNtupleDColumn("tot");
   analysisManager->FinishNtuple();
 }
 }
