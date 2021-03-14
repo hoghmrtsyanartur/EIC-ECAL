@@ -360,7 +360,7 @@ G4double wlPbWO4[52] = {675.,
 
 
    // G4double RIn = 15 * cm;
-    G4double ROut = 120 *cm;
+   // G4double ROut = 120 *cm;
     //G4double ROutshift = 5 * cm;
    // G4double Thickness = 20 * cm;
     //double SizeZ;
@@ -400,6 +400,8 @@ G4double wlPbWO4[52] = {675.,
     G4double counter_y = tedlar_y;
     G4double counter_z = tedlar_z + 2*glue_thick +  2*PMTWin_thick;
 
+    auto worldSizeXY = 1.5*counter_x*kNofColumns;
+    auto worldSizeZ = 1.5*counter_z;
 
     G4GenericMessenger *Messenger = new G4GenericMessenger(this, "/EMCAL/");
             Messenger->DeclareProperty("pwoThickness", PWO_Thickness, "Thikness (z direction dimention) of PWO crystals ");
@@ -432,8 +434,7 @@ G4double wlPbWO4[52] = {675.,
 */
     
 
-    auto worldSizeXY = 2*ROut;
-    double worldSizeZ = 3.*m;
+    
     //................Get Materials.................................
 
     
@@ -536,7 +537,7 @@ G4double wlPbWO4[52] = {675.,
   G4double row_x = kNofRows*counter_x;
   G4double row_y = kNofColumns*counter_y;
   G4double column_x = counter_x;
-  G4double column_y = counter_y;
+ // G4double column_y = counter_y;
 
   auto row_s = new G4Box("row",row_x*0.5,row_y*0.5,counter_z*0.5);
   auto row_lv = new G4LogicalVolume(row_s,Air,"ROW_LV");
@@ -572,7 +573,7 @@ G4double wlPbWO4[52] = {675.,
 
   auto PWO_Solid = new G4Box("Crystal",block_x*0.5,block_y*0.5,block_z*0.5);
   fPWO_LV = new G4LogicalVolume(PWO_Solid,PbWO4,"CrystalLV");
-  new G4PVPlacement(nullptr, G4ThreeVector(0,0,0), fPWO_LV,'name', counter_log, false, fCheckOverlaps);
+  new G4PVPlacement(nullptr, G4ThreeVector(0,0,0), fPWO_LV,"PWO_name", counter_log, false, fCheckOverlaps);
 
 
   auto CrystalVisAttr = new G4VisAttributes(G4Color(0.3, 0.5, 0.9, 0.9));

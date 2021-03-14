@@ -1297,6 +1297,7 @@ CMakeFiles/calorimeter.dir/src/Event.cc.o: /home/artur/Geant/install_path/geant4
 CMakeFiles/calorimeter.dir/src/Event.cc.o: /home/artur/Geant/install_path/geant4.10.07-install/include/PTL/Globals.hh
 CMakeFiles/calorimeter.dir/src/Event.cc.o: /home/artur/Geant/install_path/geant4.10.07-install/include/PTL/Types.hh
 CMakeFiles/calorimeter.dir/src/Event.cc.o: /home/artur/Geant/install_path/geant4.10.07-install/include/PTL/Utility.hh
+CMakeFiles/calorimeter.dir/src/Event.cc.o: /home/artur/Geant/projects/EIC-ECAL/calorimeter/include/Connstants.hh
 CMakeFiles/calorimeter.dir/src/Event.cc.o: /home/artur/Geant/projects/EIC-ECAL/calorimeter/include/DetectorHit.hh
 CMakeFiles/calorimeter.dir/src/Event.cc.o: /home/artur/Geant/projects/EIC-ECAL/calorimeter/include/Event.hh
 CMakeFiles/calorimeter.dir/src/Event.cc.o: /home/artur/Geant/projects/EIC-ECAL/calorimeter/src/Event.cc
